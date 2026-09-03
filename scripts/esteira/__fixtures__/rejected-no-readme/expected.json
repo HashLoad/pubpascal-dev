@@ -1,0 +1,13 @@
+{
+  "verdict": "rejected",
+  "rules": {
+    "has_readme": "fail",
+    "has_changelog": "pass",
+    "has_examples": "pass",
+    "has_installing": "pass",
+    "has_images": "pass",
+    "has_pascal_sources": "pass",
+    "has_license": "pass",
+    "repo_clonable": "pass"
+  }
+}

@@ -1,0 +1,31 @@
+# Dependabot configuration for pubpascal-dev.
+# Docs: https://docs.github.com/en/code-security/dependabot
+#
+# Trimmed to the repo's real ecosystems: npm (Next.js portal) + github-actions (quality.yml).
+# The Delphi CLI lives in the separate pubpascal-app repo
+# (its deps are tracked there).
+
+version: 2
+updates:
+  # GitHub Actions used by quality.yml itself
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+
+  # Node / TypeScript
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      js-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # eslint 10 removed context.getFilename; eslint-plugin-react (via
+      # eslint-config-next) still calls it and crashes the lint run.
+      - dependency-name: "eslint"
+        versions: [">=10"]
+      # typescript 7 (native port) breaks next build; typescript-eslint pins <6.1.
+      - dependency-name: "typescript"
+        versions: [">=7"]
