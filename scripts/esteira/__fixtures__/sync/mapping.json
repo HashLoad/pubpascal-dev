@@ -1,0 +1,6 @@
+[
+  { "verdict": "approved", "expected_status": "active" },
+  { "verdict": "approved_with_warnings", "expected_status": "active" },
+  { "verdict": "rejected", "expected_status": "rejected" },
+  { "verdict": "not_supported", "expected_status": "rejected" }
+]
