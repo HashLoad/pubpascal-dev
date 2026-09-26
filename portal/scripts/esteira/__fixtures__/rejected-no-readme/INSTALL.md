@@ -1,0 +1,3 @@
+# Install
+
+Clone the repo.

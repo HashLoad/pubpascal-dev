@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PubPascal — Package Manager</title>
+<style>
+  :root{--bg:#0b1220;--panel:#0f172a;--panel2:#111c34;--line:#1e293b;--muted:#64748b;
+        --txt:#e2e8f0;--blue:#3b82f6;--red:#ef4444;--green:#10b981;--amber:#f59e0b;--gold:#eab308;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+            font-family:"Segoe UI",system-ui,sans-serif;font-size:14px;}
+  header{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);}
+  .logo{font-weight:800;font-size:16px;} .logo .p{color:var(--red);} .logo .d{color:var(--blue);}
+  .tag{font-size:9px;background:var(--line);color:var(--muted);padding:2px 6px;border-radius:4px;letter-spacing:.1em;}
+  header h1{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 0 4px;}
+  /* host toggle (demo only) */
+  .host{margin-left:auto;display:flex;align-items:center;gap:8px;}
+  .host span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:5px 11px;font-size:12px;cursor:pointer;font-weight:600;}
+  .seg button.on{background:var(--blue);color:#fff;}
+  main{padding:18px;max-width:1000px;margin:0 auto;}
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .search{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+          padding:8px 12px;color:var(--txt);font-size:13px;}
+  .ideNote{font-size:11px;color:var(--blue);display:none;}
+  body.ide .ideNote{display:inline;}
+  /* tabs (packages | workspaces) */
+  .tabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);margin-bottom:14px;}
+  .tab{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);
+       padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:-1px;}
+  .tab:hover{color:#cbd5e1;}
+  .tab.on{color:var(--txt);border-bottom-color:var(--blue);}
+  .tab span.cnt{font-size:12px;color:var(--muted);font-weight:400;}
+  .tabs .ideNote{margin-left:auto;padding-right:4px;}
+  /* kind legend (hint) */
+  .legend{display:flex;flex-wrap:wrap;align-items:center;gap:7px 16px;margin-bottom:14px;
+          padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+          background:var(--panel);font-size:11px;color:var(--muted);}
+  .legend .leg-title{font-weight:700;color:#cbd5e1;width:100%;}
+  .legend .leg-item{display:inline-flex;align-items:center;gap:5px;}
+  /* package rows */
+  .pkg{display:flex;align-items:center;gap:14px;padding:11px 14px;border:1px solid var(--line);
+       border-radius:10px;background:var(--panel);margin-bottom:7px;transition:border-color .15s;}
+  .pkg:hover{border-color:#334155;}
+  .pkg .name{font-weight:700;min-width:140px;}
+  .pkg .name .star{color:var(--gold);}
+  .ver{font-family:ui-monospace,monospace;font-size:12px;color:var(--blue);min-width:64px;}
+  .desc{flex:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .seal{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+        padding:3px 9px;border-radius:999px;background:rgba(16,185,129,.15);color:var(--green);}
+  .seal .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .kind{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.03em;
+        background:rgba(245,158,11,.15);color:var(--amber);white-space:nowrap;}
+  .kind.rt{background:var(--line);color:#94a3b8;}
+  .kind.inst{background:rgba(139,92,246,.18);color:#a78bfa;}
+  /* sponsor tiers */
+  .kind.gold{background:rgba(234,179,8,.18);color:var(--gold);}
+  .kind.silver{background:rgba(148,163,184,.20);color:#cbd5e1;}
+  .kind.bronze{background:rgba(180,120,60,.20);color:#d39a6a;}
+  .empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:13px;}
+  /* sponsors (subscription) — highlighted + sorted first */
+  .pkg.sponsor{border-color:rgba(234,179,8,.45);
+        background:linear-gradient(90deg, rgba(234,179,8,.07), var(--panel) 55%);}
+  .sponsor-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;
+        background:rgba(234,179,8,.18);color:var(--gold);letter-spacing:.02em;white-space:nowrap;}
+  .desc i{color:#94a3b8;font-style:normal;font-weight:600;}
+  .btn{border:1px solid var(--line);background:#1a2740;color:var(--txt);border-radius:7px;
+       padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:border-color .15s;}
+  .btn:hover{border-color:var(--blue);color:#fff;}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .install{display:none;} body.ide .install{display:inline-block;}
+  /* version split-button + dropdown */
+  .split{position:relative;}
+  body.ide .split.install{display:inline-flex;}
+  .split .lbl{border-top-right-radius:0;border-bottom-right-radius:0;}
+  .split .caret{border-top-left-radius:0;border-bottom-left-radius:0;
+        border-left:1px solid rgba(255,255,255,.25);padding:6px 8px;}
+  .vers{position:absolute;top:calc(100% + 4px);right:0;min-width:175px;background:var(--panel2);
+        border:1px solid var(--line);border-radius:8px;padding:4px;z-index:10;display:none;
+        box-shadow:0 10px 28px rgba(0,0,0,.45);}
+  .vers.open{display:block;}
+  .vers .vhead{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:5px 8px 3px;}
+  .vers > div:not(.vhead){display:flex;justify-content:space-between;gap:14px;align-items:center;
+        padding:6px 8px;border-radius:5px;cursor:pointer;}
+  .vers > div:not(.vhead):hover{background:var(--line);}
+  .vers > div.on{background:rgba(59,130,246,.15);}
+  .vers > div b{color:var(--blue);font-family:ui-monospace,monospace;font-size:12px;font-weight:700;}
+  .vers > div span{color:var(--muted);font-size:11px;}
+  /* workspace card */
+  .ws{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;}
+  .ws .top{display:flex;align-items:center;gap:10px;}
+  .ws .deps{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:#cbd5e1;}
+  .chip.root{border-color:var(--blue);color:var(--blue);}
+  .ws .actions{margin-top:12px;display:flex;gap:8px;}
+  #log{margin-top:18px;font-family:ui-monospace,monospace;font-size:11px;color:var(--green);min-height:16px;}
+  /* detail view */
+  #detail-view{display:none;}
+  .back{display:inline-flex;align-items:center;gap:6px;background:transparent;border:0;color:var(--blue);
+        font-size:13px;font-weight:600;cursor:pointer;padding:4px 0;margin-bottom:10px;}
+  .back:hover{color:#fff;}
+  .detail-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .detail-head .name{font-size:20px;font-weight:800;}
+  .detail-head .slug{font-family:ui-monospace,monospace;font-size:12px;color:var(--blue);}
+  .detail-meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin:12px 0 4px;font-size:12px;color:var(--muted);}
+  .detail-meta b{color:#cbd5e1;font-weight:700;}
+  .detail-desc{margin:14px 0;color:#cbd5e1;font-size:13px;line-height:1.55;}
+  .section{margin-top:20px;}
+  .section h2{font-size:13px;font-weight:700;color:#cbd5e1;margin:0 0 10px;
+        text-transform:uppercase;letter-spacing:.06em;}
+  .deplist{display:flex;flex-direction:column;gap:6px;}
+  .deprow{display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--line);
+        border-radius:8px;background:var(--panel);}
+  .deprow .dn{font-weight:600;}
+  .deprow .dv{font-family:ui-monospace,monospace;font-size:12px;color:var(--blue);}
+  .ws-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;margin-bottom:10px;}
+  .ws-card .ws-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .ws-card .ws-name{font-weight:700;}
+  .ws-card .ws-chips{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+  .detail-footer{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap;}
+  /* --- portal-like detail layout --------------------------------------- */
+  .detail-grid{display:flex;gap:18px;align-items:flex-start;margin-top:14px;}
+  .detail-main{flex:1;min-width:0;}
+  .detail-side{width:280px;flex:none;display:flex;flex-direction:column;gap:14px;}
+  @media (max-width:760px){ .detail-grid{flex-direction:column;} .detail-side{width:100%;} }
+  /* a panel card, like the legend/rows */
+  .card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px;}
+  .card.about{position:relative;}
+  .card .card-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .card .card-head .mark{color:var(--gold);font-size:14px;}
+  .card .card-head h2{font-size:11px;font-weight:700;color:#cbd5e1;margin:0;
+        text-transform:uppercase;letter-spacing:.08em;}
+  .card .card-head .tier-badge{margin-left:auto;}
+  .card .about-name{font-size:18px;font-weight:800;margin-bottom:4px;}
+  .card .about-slug{font-family:ui-monospace,monospace;font-size:12px;color:var(--blue);}
+  .card .about-desc{margin-top:12px;color:#cbd5e1;font-size:13px;line-height:1.6;}
+  /* meta rows (LANGUAGE / PLATFORMS) */
+  .meta-row{display:flex;align-items:flex-start;gap:12px;margin-top:14px;}
+  .meta-row .meta-label{font-size:10px;font-weight:700;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.08em;min-width:88px;padding-top:3px;}
+  .meta-row .meta-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  /* CRA card */
+  .cra .cra-top{display:flex;align-items:center;gap:8px;}
+  .cra .cra-top .shield{color:var(--green);font-size:14px;}
+  .cra .cra-top h3{font-size:13px;font-weight:700;color:#fff;margin:0;}
+  .cra .cra-top .pct{margin-left:auto;font-family:ui-monospace,monospace;
+        font-size:18px;font-weight:800;color:var(--green);}
+  .cra .cra-bar{margin-top:8px;height:6px;width:100%;border-radius:999px;
+        background:var(--line);overflow:hidden;}
+  .cra .cra-bar > div{height:100%;border-radius:999px;background:var(--green);transition:width .25s;}
+  .cra .cra-level{margin-top:6px;font-size:11px;font-weight:700;color:var(--green);}
+  .cra .cra-signals{margin-top:12px;display:flex;flex-direction:column;gap:7px;}
+  .cra .cra-sig{display:flex;align-items:center;gap:8px;font-size:12px;}
+  .cra .cra-sig .ic{font-weight:800;width:14px;text-align:center;}
+  .cra .cra-sig.ok{color:#cbd5e1;} .cra .cra-sig.ok .ic{color:var(--green);}
+  .cra .cra-sig.no{color:var(--muted);} .cra .cra-sig.no .ic{color:var(--muted);}
+  /* SBOM card */
+  .sbom{border-color:rgba(16,185,129,.30);background:rgba(16,185,129,.06);}
+  .sbom .sbom-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .sbom .sbom-top .shield{color:var(--green);font-size:14px;}
+  .sbom .sbom-top h3{font-size:13px;font-weight:700;color:#fff;margin:0;}
+  .sbom .sbom-badge{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.06em;
+        text-transform:uppercase;padding:2px 8px;border-radius:999px;
+        background:rgba(16,185,129,.18);color:#6ee7b7;}
+  .sbom .sbom-rows{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;}
+  .sbom .sbom-rows dt{color:var(--muted);} .sbom .sbom-rows dd{margin:0;color:#cbd5e1;}
+  .sbom .sbom-rows dd.mono{font-family:ui-monospace,monospace;}
+  .sbom .btn.sbom-dl{margin-top:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
+        background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.40);color:#6ee7b7;}
+  .sbom .btn.sbom-dl:hover{border-color:var(--green);color:#a7f3d0;}
+</style>
+</head>
+<body class="ide">
+  <header>
+    <span class="logo"><span class="p">Pub</span><span class="d">Pascal</span></span>
+    <span class="tag" id="tag"></span>
+    <h1 id="ctx"></h1>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <span class="tab on" id="tab-packages"><span id="lbl-p"></span> <span class="cnt" id="cnt-p"></span></span>
+      <span class="ideNote" id="ideNote"></span>
+    </div>
+
+    <div class="bar">
+      <input class="search" id="search" oninput="filter(this.value)" />
+    </div>
+
+    <div id="packages-view">
+      <div class="legend" id="legend"></div>
+      <div id="pkgs"></div>
+    </div>
+
+    <div id="detail-view"></div>
+
+    <div id="log"></div>
+  </main>
+
+<script>
+// ---- i18n (prepared for multi-language; only EN wired for now) ----
+const LANG = "en";
+const STRINGS = {
+  en: {
+    tag: "PACKAGE MANAGER",
+    ctxInitial: "— manage your packages & workspaces",
+    ctxIde: "— inside RAD Studio (manage + install)",
+    ctxDesktop: "— desktop (manage your portal packages)",
+    hostDemo: "host (demo):",
+    tabPackages: "Packages",
+    tabWorkspaces: "Workspaces",
+    ideNote: "⚙️ IDE mode — install / register BPL enabled",
+    searchPackages: "Search packages…",
+    searchWorkspaces: "Search workspaces…",
+    sponsor: "★ Sponsor",
+    details: "details",
+    install: "Install",
+    chooseVersion: "choose version",
+    installVersion: "Install version",
+    kindRuntime: "runtime",
+    kindDesigntime: "⚙ designtime",
+    kindInstaller: "⤓ installer",
+    tipRuntime: "Runtime library — just adds search paths",
+    tipDesigntime: "Has palette components — registers a BPL in the IDE",
+    tipInstaller: "Vendor installer — runs the setup.exe",
+    legendTitle: "Install",
+    legInstall: "fetches the package into your project’s modules/ and adds its source path to the active project — version pinned per project.",
+    noPackages: "No packages yet — type to search, or check the portal is reachable.",
+    dependencies: "dependencies",
+    noDeps: "No declared dependencies.",
+    workspaces: "Workspace",
+    installSet: "Install the set",
+    back: "Back",
+    openPortal: "Open on portal",
+    openGraph: "Open graph",
+    installWorkspace: "Install into project",
+    craComplete: "100% CRA",
+    ready: "ready.",
+    selectedVersion: "selected version",
+    logOutside: "  [outside Delphi: would run the CLI / ToolsAPI]",
+    aboutProject: "About the project",
+    languageLabel: "Language",
+    platformsLabel: "Platforms",
+    craHeading: "CRA-readiness",
+    craFull: "Fully CRA-ready",
+    craSignalsMet: "{met} of {total} signals",
+    craSbom: "Software Bill of Materials",
+    craSecurityPolicy: "Security disclosure policy",
+    craMaintained: "Actively maintained",
+    sbomHeading: "Software Bill of Materials",
+    sbomCraBadge: "CRA-ready",
+    sbomFormat: "Format",
+    sbomAttestedBy: "Attested by",
+    sbomPublished: "Published",
+    sbomDownloads: "Downloads",
+    sbomDownload: "Download SBOM",
+  },
+};
+function t(k){ return (STRINGS[LANG] || STRINGS.en)[k] ?? k; }
+
+// Packages come from the portal — `pp pkg list` (gold sponsors) on the front page,
+// `pp pkg search` while typing — pushed in here via the host bridge. No mock list.
+let PKGS = [];
+
+// The host pushes the catalog payload here:
+//   {packages:[{slug,name,description,tier,downloads,license_type}]}
+function loadPackages(payload){
+  const arr = (payload && Array.isArray(payload.packages)) ? payload.packages : [];
+  PKGS = arr.map(p => ({
+    slug: p.slug,
+    name: p.name,
+    desc: p.description || "",
+    tier: p.tier || "none",
+    downloads: p.downloads || 0,
+  }));
+  document.getElementById("cnt-p").textContent = `(${PKGS.length})`;
+  renderPkgs(Q);
+}
+
+const inDelphi = !!(window.chrome && window.chrome.webview);
+function host(action,target){
+  const msg={action,target};
+  if(inDelphi) window.chrome.webview.postMessage(JSON.stringify(msg));
+  log(`→ host: ${action}(${target})`+(inDelphi?"":t("logOutside")));
+}
+function log(s){document.getElementById("log").textContent=s;}
+
+let Q="";
+function renderPkgs(q=Q){
+  Q=q;
+  const box=document.getElementById("pkgs"); box.innerHTML="";
+  if(PKGS.length===0){
+    box.innerHTML=`<div class="empty">${t("noPackages")}</div>`;
+    return;
+  }
+  // The host returns them already ordered (gold first); keep gold pinned here too.
+  const list=PKGS.slice().sort((a,b)=>(b.tier==="gold"?1:0)-(a.tier==="gold"?1:0));
+  for(const p of list){
+    const gold = p.tier==="gold";
+    const tierBadge = (p.tier && p.tier!=="none")
+      ? `<span class="kind ${p.tier}" title="sponsor: ${p.tier}">${p.tier}</span>` : "";
+    const el=document.createElement("div"); el.className="pkg"+(gold?" sponsor":"");
+    el.innerHTML=`
+      <span class="name">${gold?'<span class="star">★</span> ':''}${p.name}</span>
+      <span class="ver">${p.slug}</span>
+      <span class="desc">${p.desc}</span>
+      ${tierBadge}
+      <span class="seal"><span class="dot"></span>100%</span>
+      <button class="btn" onclick="host('details','${p.slug}')">${t("details")}</button>
+      <button class="btn primary install" onclick="doInstall('${p.slug}')">${t("install")}</button>`;
+    box.appendChild(el);
+  }
+}
+
+// Search is server-side (the portal), debounced: empty -> the gold front page,
+// otherwise -> search across ALL published packages. In a plain browser (dev)
+// there is no host, so fall back to a client filter over whatever is loaded.
+// Search is server-side (the portal), debounced: empty -> the gold front page,
+// otherwise -> search across ALL published packages. In a plain browser (dev)
+// there is no host, so fall back to a client filter over whatever is loaded.
+let searchTimer=null;
+function filter(v){
+  Q=v;
+  if(searchTimer) clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{
+    if(inDelphi) host(v.trim()==="" ? "list" : "search", v.trim());
+    else renderPkgs(v);
+  }, 250);
+}
+
+function doInstall(slug){
+  // Source/runtime install: the CLI fetches the newest published version into the
+  // project's modules/ and the OTA wires its search path. (Design-time / installer
+  // kinds come from the package manifest in a later increment.)
+  host('add-paths', slug);
+}
+
+// --- detail view -----------------------------------------------------------
+// Minimal HTML escaping for text we drop into innerHTML (names, descriptions).
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// The host pushes a package's detail payload here (pp pkg show <slug> --json):
+//   {slug,name,description,tier,license_type,license_name,score,repository_url,
+//    platforms:[string], languages:[string],
+//    cra:{percent,level,signals:{sbom,securityPolicy,maintained}},
+//    sbom: null | {format,attestedBy,published,downloads,downloadUrl},
+//    dependencies:[{name,version}],
+//    workspaces:[{id,name,dependencies:[{slug,name}]}]}
+// Renders the in-cockpit detail (mirrors the portal's read-only package page in
+// the dark theme: two columns — main + CRA/SBOM sidebar) and hides the list.
+function showDetail(payload){
+  const p = payload || {};
+  const slug = p.slug || "";
+  const tier = p.tier || "none";
+  const deps = Array.isArray(p.dependencies) ? p.dependencies : [];
+  const wss  = Array.isArray(p.workspaces) ? p.workspaces : [];
+  const langs = Array.isArray(p.languages) ? p.languages : [];
+  const plats = Array.isArray(p.platforms) ? p.platforms : [];
+
+  const tierBadge = (tier && tier!=="none")
+    ? `<span class="kind ${esc(tier)} tier-badge" title="sponsor: ${esc(tier)}">${esc(tier)}</span>` : "";
+
+  // Chip rows — hidden entirely when the array is empty.
+  const chipRow = (label, arr) => arr.length===0 ? "" : `
+    <div class="meta-row">
+      <span class="meta-label">${label}</span>
+      <div class="meta-chips">${arr.map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div>
+    </div>`;
+
+  // Dependencies list (or the empty hint).
+  let depsHtml;
+  if(deps.length===0){
+    depsHtml = `<div class="empty">${t("noDeps")}</div>`;
+  } else {
+    depsHtml = `<div class="deplist">` + deps.map(d =>
+      `<div class="deprow"><span class="dn">${esc(d.name || d.slug || "")}</span>` +
+      `<span class="dv">${esc(d.version || "")}</span></div>`).join("") + `</div>`;
+  }
+
+  // CONDITIONAL workspace section — only when the package is bundled by one.
+  let wsHtml = "";
+  if(wss.length>0){
+    wsHtml = `<div class="section"><h2>${t("workspaces")}</h2>` + wss.map(w => {
+      const wd = Array.isArray(w.dependencies) ? w.dependencies : [];
+      const chips = wd.map(x =>
+        `<span class="chip">${esc(x.name || x.slug || "")}</span>`).join("");
+      return `<div class="ws-card">
+        <div class="ws-top">
+          <span class="ws-name">${esc(w.name || w.id || "")}</span>
+          <button class="btn primary" onclick="host('install-set','${esc(slug)}')">${t("installSet")}</button>
+        </div>
+        <div class="ws-chips">${chips}</div>
+      </div>`;
+    }).join("") + `</div>`;
+  }
+
+  // --- right sidebar: CRA-readiness card -------------------------------------
+  const cra = p.cra || {};
+  const sig = cra.signals || {};
+  const pct = (cra.percent===0 || cra.percent) ? cra.percent : 0;
+  const craLevel = pct>=100 ? t("craFull") : (cra.level || "");
+  const sigRow = (label, ok) =>
+    `<div class="cra-sig ${ok?"ok":"no"}"><span class="ic">${ok?"✓":"✗"}</span><span>${label}</span></div>`;
+  const craHtml = `
+    <div class="card cra">
+      <div class="cra-top">
+        <span class="shield">🛡</span>
+        <h3>${t("craHeading")}</h3>
+        <span class="pct">${esc(pct)}%</span>
+      </div>
+      <div class="cra-bar"><div style="width:${Number(pct)||0}%"></div></div>
+      <div class="cra-level">${esc(craLevel)}</div>
+      <div class="cra-signals">
+        ${sigRow(t("craSbom"), !!sig.sbom)}
+        ${sigRow(t("craSecurityPolicy"), !!sig.securityPolicy)}
+        ${sigRow(t("craMaintained"), !!sig.maintained)}
+      </div>
+    </div>`;
+
+  // --- right sidebar: SBOM card (only when an SBOM is published) -------------
+  let sbomHtml = "";
+  if(p.sbom){
+    const s = p.sbom;
+    const sbomRow = (label, val, mono) => (val || val===0)
+      ? `<dt>${label}</dt><dd class="${mono?"mono":""}">${esc(val)}</dd>` : "";
+    const dl = s.downloadUrl
+      ? `<button class="btn sbom-dl" onclick="host('open-url','${esc(s.downloadUrl)}')">⤓ ${t("sbomDownload")}</button>` : "";
+    sbomHtml = `
+      <div class="card sbom">
+        <div class="sbom-top">
+          <span class="shield">🛡</span>
+          <h3>${t("sbomHeading")}</h3>
+          <span class="sbom-badge">${t("sbomCraBadge")}</span>
+        </div>
+        <dl class="sbom-rows">
+          ${sbomRow(t("sbomFormat"), s.format, true)}
+          ${sbomRow(t("sbomAttestedBy"), s.attestedBy, false)}
+          ${sbomRow(t("sbomPublished"), s.published, false)}
+          ${sbomRow(t("sbomDownloads"), s.downloads, false)}
+        </dl>
+        ${dl}
+      </div>`;
+  }
+
+  document.getElementById("detail-view").innerHTML = `
+    <button class="back" onclick="showList()">← ${t("back")}</button>
+    <div class="detail-grid">
+      <div class="detail-main">
+        <div class="card about">
+          <div class="card-head">
+            <span class="mark">▲</span>
+            <h2>${t("aboutProject")}</h2>
+            ${tierBadge}
+          </div>
+          <div class="about-name">${tier==="gold"?'<span class="star" style="color:var(--gold)">★</span> ':''}${esc(p.name || slug)}</div>
+          <div class="about-slug">${esc(slug)}</div>
+          <div class="about-desc">${esc(p.description || "")}</div>
+          ${chipRow(t("languageLabel"), langs)}
+          ${chipRow(t("platformsLabel"), plats)}
+        </div>
+        <div class="section">
+          <h2>${t("dependencies")}</h2>
+          ${depsHtml}
+        </div>
+        ${wsHtml}
+      </div>
+      <div class="detail-side">
+        ${craHtml}
+        ${sbomHtml}
+      </div>
+    </div>
+    <div class="detail-footer">
+      <button class="btn primary" onclick="doInstall('${esc(slug)}')">${t("install")}</button>
+      <button class="btn" onclick="host('open-portal','${esc(slug)}')">${t("openPortal")}</button>
+    </div>`;
+
+  // Swap views: hide the list chrome, show the detail.
+  document.querySelector(".tabs").style.display = "none";
+  document.querySelector(".bar").style.display = "none";
+  document.getElementById("packages-view").style.display = "none";
+  document.getElementById("detail-view").style.display = "block";
+  log(`details: ${slug}`);
+}
+
+// Back to the catalog list view.
+function showList(){
+  document.getElementById("detail-view").style.display = "none";
+  document.querySelector(".tabs").style.display = "";
+  document.querySelector(".bar").style.display = "";
+  document.getElementById("packages-view").style.display = "";
+}
+
+// Apply the static (non-list) strings — switching LANG + re-rendering re-localizes everything.
+function applyI18n(){
+  document.getElementById("tag").textContent = t("tag");
+  document.getElementById("ctx").textContent = t("ctxIde");
+  document.getElementById("lbl-p").textContent = t("tabPackages");
+  document.getElementById("ideNote").textContent = t("ideNote");
+  document.getElementById("search").placeholder = t("searchPackages");
+  document.getElementById("legend").innerHTML =
+    `<span class="leg-title">${t("legendTitle")}</span>` +
+    `<span class="leg-item">${t("legInstall")}</span>`;
+  document.getElementById("log").textContent = t("ready");
+}
+
+applyI18n();
+// Front page = the portal's gold sponsors (pp pkg list). In a plain browser
+// (dev, no host) there is no data — render the empty state.
+if(inDelphi) host("list",""); else renderPkgs();
+</script>
+</body>
+</html>

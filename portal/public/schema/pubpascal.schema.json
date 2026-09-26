@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.pubpascal.dev/schema/pubpascal.schema.json",
+  "title": "PubPascal package manifest",
+  "description": "pubpascal.json — PubPascal's own package manifest (independent of boss.json).",
+  "type": "object",
+  "required": ["name", "version", "kind"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+([-+].+)?$",
+      "description": "SemVer."
+    },
+    "kind": {
+      "enum": ["runtime", "designtime", "installer"],
+      "description": "Decides what 'install' does. runtime=add search paths (the library you use in code); designtime=also build+register the design-time BPL (IDE only); installer=download+run the vendor's installer (the install descriptor)."
+    },
+    "description": { "type": "string" },
+    "homepage": { "type": "string", "format": "uri" },
+    "license": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Unit folders relative to the repo root; added to DCC_UnitSearchPath."
+    },
+    "platforms": {
+      "type": "array",
+      "items": { "enum": ["Win32", "Win64", "Linux64", "OSX64", "OSXARM64", "Android", "Android64", "iOS"] },
+      "uniqueItems": true,
+      "default": ["Win32", "Win64"]
+    },
+    "compilers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Supported RAD Studio compiler versions, e.g. '13.0'."
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Map of '<owner>/<repo>' to a version range.",
+      "patternProperties": {
+        "^[^/]+/[^/]+$": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "design": {
+      "type": "object",
+      "description": "Required when kind is 'designtime'.",
+      "required": ["package"],
+      "additionalProperties": false,
+      "properties": {
+        "package": { "type": "string", "description": "Path to the design-time .dpk." },
+        "registerUnit": { "type": "string", "description": "Unit with the Register procedure." }
+      }
+    },
+    "install": {
+      "type": "object",
+      "description": "Required when kind is 'installer'. The vendor installer PubPascal downloads + runs.",
+      "required": ["type", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["exe", "msi"] },
+        "url": { "type": "string", "description": "Download URL. For paid packages the portal serves the authorized, license-gated URL." },
+        "silentArgs": { "type": "string", "description": "Args for an unattended install, e.g. '/VERYSILENT'." },
+        "interactive": { "type": "boolean", "description": "Run the installer's GUI instead of silent." },
+        "sha256": { "type": "string", "description": "Expected file hash (integrity check before running)." },
+        "signedBy": { "type": "string", "description": "Expected Authenticode signer (trust check before running)." }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "designtime" } } },
+      "then": { "required": ["design"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "installer" } } },
+      "then": { "required": ["install"] }
+    },
+    {
+      "if": { "properties": { "kind": { "enum": ["runtime", "designtime"] } } },
+      "then": { "required": ["sources"] }
+    }
+  ]
+}

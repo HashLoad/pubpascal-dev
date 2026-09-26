@@ -1,0 +1,82 @@
+name: Sponsorship expiry
+
+on:
+  schedule:
+    # Pre-launch: monthly (1st of the month, 02:00 UTC). There are no paid
+    # sponsorships yet — showcase highlights have sponsorship_ends_at NULL and
+    # are never expired. When real subscriptions exist, restore the daily
+    # cadence per ADR-022 ("0 2 * * *").
+    - cron: "0 2 1 * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run — log what would expire without making changes"
+        required: false
+        type: boolean
+        default: false
+
+run-name: "Sponsorship expiry — ${{ github.event_name }}${{ inputs.dry_run && ' (dry-run)' || '' }}"
+
+permissions:
+  contents: read
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout portal repo
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run expiry
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+          ARGS=""
+          [[ "$DRY_RUN" == "true" ]] && ARGS="--dry-run"
+          node scripts/sponsorship/expiry.mjs $ARGS
+
+      - name: Upload expiry summary
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: expiry-summary-${{ github.run_number }}
+          path: expiry-summary.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Append step summary
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ ! -f expiry-summary.json ]]; then
+            echo "expiry-summary.json missing — expiry script probably failed before writing it." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          dry=$(jq -r '.dry_run' expiry-summary.json)
+          expired_packages=$(jq -r '.expired_packages' expiry-summary.json)
+          expired_subscriptions=$(jq -r '.expired_subscriptions' expiry-summary.json)
+          errors=$(jq -r '.errors' expiry-summary.json)
+          {
+            echo "## Sponsorship expiry"
+            echo ""
+            echo "- dry_run: \`$dry\`"
+            echo "- Expired packages: \`$expired_packages\`"
+            echo "- Expired subscriptions: \`$expired_subscriptions\`"
+            echo "- Errors: \`$errors\`"
+            echo ""
+            echo "| Type | ID / Slug | Action | Error |"
+            echo "|------|-----------|--------|-------|"
+            jq -r '.entries[] | "| \(.type) | \(.slug // .id) | \(.action // "—") | \(.error // "") |"' expiry-summary.json
+          } >> "$GITHUB_STEP_SUMMARY"

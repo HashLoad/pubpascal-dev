@@ -1,0 +1,25 @@
+{
+  "name": "pubpascal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PubPascal Ecosystem Monorepo",
+  "workspaces": [
+    "portal"
+  ],
+  "scripts": {
+    "dev": "npm --workspace=portal run dev",
+    "build": "npm --workspace=portal run build",
+    "test": "npm --workspace=portal test",
+    "test:coverage": "npm --workspace=portal run test:coverage",
+    "lint": "npm --workspace=portal run lint"
+  },
+  "keywords": [
+    "delphi",
+    "pascal",
+    "pubpascal",
+    "package-manager",
+    "boss"
+  ],
+  "author": "HashLoad",
+  "license": "Apache-2.0"
+}

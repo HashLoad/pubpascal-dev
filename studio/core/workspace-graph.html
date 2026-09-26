@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PubPascal — Workspace</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  
+  :root { 
+    --bg: #070c16; 
+    --panel: #0f172a; 
+    --side: #090e18; 
+    --line: rgba(255, 255, 255, 0.08); 
+    --muted: #64748b;
+    --txt: #e2e8f0; 
+    --brand: #3b82f6; 
+    --red: #ef4444; 
+    --green: #10b981; 
+    --amber: #f59e0b; 
+  }
+  
+  * { box-sizing: border-box; }
+  
+  html, body { 
+    margin: 0; 
+    height: 100%; 
+    background: var(--bg); 
+    color: var(--txt);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  #shell { display: flex; height: 100%; }
+
+  /* ── Workspace sidebar (manages N workspaces) ───────────────────────────── */
+  #ws-sidebar { 
+    width: 198px; 
+    flex: none; 
+    background: var(--side); 
+    border-right: 1px solid var(--line);
+    display: flex; 
+    flex-direction: column; 
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), padding 0.2s, opacity 0.2s;
+    overflow: hidden;
+  }
+  #ws-sidebar.collapsed {
+    width: 0px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .ws-head { 
+    padding: 14px 16px 12px; 
+    border-bottom: 1px solid var(--line); 
+    display: flex; 
+    align-items: center;
+    gap: 6px; 
+    font-size: 11px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.8px; 
+    color: #f1f5f9; 
+  }
+  
+  .ws-head .count { 
+    margin-left: auto; 
+    font-size: 10px; 
+    color: #93c5fd; 
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 12px; 
+    padding: 1px 8px; 
+    text-transform: none; 
+    font-weight: 600;
+  }
+  
+  #ws-list { 
+    flex: 1; 
+    overflow: auto; 
+    padding: 8px; 
+  }
+  
+  #ws-list::-webkit-scrollbar { width: 4px; }
+  #ws-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
+  
+  .ws-empty { padding: 18px 10px; font-size: 11px; color: var(--muted); text-align: center; }
+  
+  .ws-item { 
+    padding: 9px 12px; 
+    border-radius: 8px; 
+    border-left: 2px solid transparent; 
+    margin-bottom: 4px;
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    cursor: pointer; 
+    transition: all 0.15s ease;
+  }
+  
+  .ws-item:hover { background: rgba(255, 255, 255, 0.03); }
+  
+  .ws-item.active { 
+    background: rgba(59, 130, 246, 0.08); 
+    border-left-color: var(--brand); 
+  }
+  
+  .ws-item .sdot { 
+    width: 8px; 
+    height: 8px; 
+    border-radius: 50%; 
+    background: #475569; 
+    flex: none; 
+    box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  }
+  
+  .ws-item .nm { 
+    font-size: 12px; 
+    color: #94a3b8; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    font-weight: 500;
+  }
+  
+  .ws-item.active .nm { color: #fff; font-weight: 600; }
+  
+  .ws-foot { padding: 10px; border-top: 1px solid var(--line); position: relative; }
+  
+  .ws-foot button { 
+    width: 100%; 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: 600;
+    border: 1px dashed rgba(255, 255, 255, 0.15); 
+    background: transparent;
+    color: var(--muted); 
+    border-radius: 8px; 
+    padding: 8px; 
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
+    gap: 6px; 
+    transition: all 0.15s ease;
+  }
+  
+  .ws-foot button:hover { 
+    border-color: var(--brand); 
+    color: #fff; 
+    background: rgba(59, 130, 246, 0.04);
+  }
+  
+  #ws-add-menu { 
+    position: absolute; 
+    bottom: calc(100% + 4px); 
+    left: 10px; 
+    right: 10px; 
+    background: #0f172a;
+    border: 1px solid var(--line); 
+    border-radius: 8px; 
+    padding: 6px; 
+    max-height: 230px; 
+    overflow: auto; 
+    z-index: 10;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+  }
+  
+  #ws-add-menu .mh { padding: 6px 8px 6px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+  #ws-add-menu .mi { padding: 8px 10px; border-radius: 6px; font-size: 12px; color: #cbd5e1; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background 0.1s; }
+  #ws-add-menu .mi:hover { background: rgba(59, 130, 246, 0.12); color: #fff; }
+
+  /* ── Main pane (active workspace graph) ─────────────────────────────────── */
+  #main { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+  
+  #diff-overlay { 
+    position: absolute; 
+    inset: 0; 
+    background: var(--bg); 
+    z-index: 20; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  
+  #diff-head { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    padding: 14px 20px; 
+    border-bottom: 1px solid var(--line); 
+    font-size: 13px; 
+    font-weight: 700; 
+  }
+  
+  #diff-head button { 
+    margin-left: auto; 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: 600; 
+    border: 1px solid var(--line); 
+    background: #0f172a; 
+    color: var(--txt); 
+    border-radius: 8px; 
+    padding: 6px 14px; 
+    transition: all 0.15s;
+  }
+  
+  #diff-head button:hover { border-color: var(--brand); color: #fff; background: rgba(59,130,246,0.1); }
+  
+  #diff-body { flex: 1; overflow: auto; padding: 20px; }
+  #diff-body::-webkit-scrollbar { width: 6px; }
+  #diff-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+  
+  .diff-repo { margin-bottom: 22px; }
+  .diff-repo h3 { font-size: 12px; color: var(--brand); margin: 0 0 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-weight: 700; }
+  .diff-repo pre { 
+    margin: 0; 
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; 
+    font-size: 11px; 
+    line-height: 1.6; 
+    white-space: pre-wrap; 
+    word-break: break-all;
+    background: #090e18; 
+    border: 1px solid var(--line); 
+    border-radius: 10px; 
+    padding: 14px 16px; 
+  }
+  
+  .diff-empty { color: var(--muted); font-size: 12px; padding: 20px 0; text-align: center; }
+  
+  #err-card { 
+    position: absolute; 
+    inset: 0; 
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 15; 
+    background: rgba(7, 11, 20, 0.85); 
+    backdrop-filter: blur(8px);
+  }
+  
+  #err-card .card { 
+    max-width: 380px; 
+    text-align: center; 
+    background: #0f172a; 
+    border: 1px solid var(--line); 
+    border-radius: 16px; 
+    padding: 26px 30px; 
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
+  }
+  
+  #err-card .icon { font-size: 28px; color: var(--amber); margin-bottom: 10px; }
+  #err-card h2 { font-size: 16px; margin: 0 0 8px; color: #fff; font-weight: 700; }
+  #err-card p { font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.6; }
+  #err-card code { font-family: ui-monospace, monospace; color: #60a5fa; background: #070c16; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+  
+  #err-login { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+  #err-login input { 
+    background: #070c16; 
+    border: 1px solid var(--line); 
+    color: var(--txt); 
+    border-radius: 8px; 
+    padding: 10px 12px; 
+    font-size: 12px; 
+    font-family: ui-monospace, monospace; 
+    transition: border-color 0.15s;
+  }
+  #err-login input:focus { outline: none; border-color: var(--brand); }
+  
+  #err-login button { 
+    cursor: pointer; 
+    font-size: 12px; 
+    font-weight: 600; 
+    border: 1px solid var(--brand); 
+    background: var(--brand); 
+    color: #fff; 
+    border-radius: 8px; 
+    padding: 10px; 
+    transition: filter 0.15s;
+  }
+  #err-login button:hover { filter: brightness(1.1); }
+  #err-login a { font-size: 11px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+  #err-login a:hover { color: #fff; }
+
+  header { 
+    padding: 14px 20px; 
+    border-bottom: 1px solid var(--line); 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    background: #090e18;
+  }
+  
+  header .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--brand); flex: none; box-shadow: 0 0 10px var(--brand); }
+  header h1 { font-size: 14px; margin: 0; font-weight: 700; letter-spacing: 0.2px; color: #fff; }
+  
+  header button { 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: 600; 
+    border: 1px solid var(--line);
+    background: #0f172a; 
+    color: var(--txt); 
+    border-radius: 8px; 
+    padding: 6px 14px; 
+    transition: all 0.15s ease; 
+  }
+  header button:hover { border-color: var(--brand); color: #fff; background: rgba(59,130,246,0.05); }
+  header .env { margin-left: auto; font-size: 10px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  #commit-bar { 
+    display: flex; 
+    gap: 10px; 
+    align-items: center; 
+    padding: 10px 20px; 
+    border-bottom: 1px solid var(--line); 
+    background: rgba(9, 14, 24, 0.8); 
+  }
+  
+  #commit-bar input { 
+    flex: 1; 
+    background: #070c16; 
+    border: 1px solid var(--line); 
+    color: var(--txt); 
+    border-radius: 8px; 
+    padding: 8px 12px; 
+    font-size: 12px; 
+    transition: border-color 0.15s;
+  }
+  #commit-bar input:focus { outline: none; border-color: var(--brand); }
+  
+  #commit-bar button { 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: 600; 
+    border: 1px solid var(--line); 
+    background: #0f172a; 
+    color: var(--txt); 
+    border-radius: 8px; 
+    padding: 8px 14px; 
+    transition: all 0.15s;
+  }
+  #commit-bar button:hover { border-color: var(--brand); color: #fff; }
+
+  #canvas { 
+    position: relative; 
+    flex: 1; 
+    overflow: auto; 
+    background: radial-gradient(circle at 50% 50%, #0d172a 0%, #070c16 100%);
+  }
+  
+  svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  
+  .node { 
+    position: absolute; 
+    width: 220px; 
+    background: rgba(15, 23, 42, 0.75); 
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06); 
+    border-radius: 14px; 
+    padding: 14px 16px;
+    box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.6); 
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, box-shadow 0.2s; 
+  }
+  
+  .node:hover { 
+    border-color: rgba(59, 130, 246, 0.4); 
+    box-shadow: 0 16px 40px -10px rgba(0,0,0,0.7), 0 0 15px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .node.root { 
+    border-color: var(--brand); 
+    box-shadow: 0 0 0 1px var(--brand), 0 12px 40px -8px rgba(59, 130, 246, 0.35); 
+  }
+  
+  .node .name { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; color: #fff; }
+  .node .ver { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; color: #60a5fa; margin-left: auto; font-weight: 600; }
+  
+  .node .meta { 
+    margin-top: 8px; 
+    font-size: 11px; 
+    color: #94a3b8; 
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .badge { 
+    font-size: 9px; 
+    padding: 2px 8px; 
+    border-radius: 12px; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  
+  .badge.clean { background: rgba(16, 185, 129, 0.12); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.2); }
+  .badge.dirty { background: rgba(245, 158, 11, 0.12); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.2); }
+  .badge.tag   { background: rgba(59, 130, 246, 0.12); color: var(--brand); border: 1px solid rgba(59, 130, 246, 0.2); }
+  .badge.missing { background: rgba(239, 68, 68, 0.12); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
+  
+  .track { font-family: ui-monospace, monospace; color: var(--muted); }
+  
+  .node .actions { margin-top: 12px; display: flex; gap: 6px; }
+  
+  .node button { 
+    flex: 1; 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    background: #0f172a; 
+    color: var(--txt);
+    border-radius: 8px; 
+    padding: 6px 0; 
+    transition: all 0.15s ease; 
+  }
+  
+  .node button:hover { 
+    border-color: var(--brand); 
+    color: #fff; 
+    background: rgba(59, 130, 246, 0.1);
+  }
+  
+  #log { 
+    padding: 8px 20px; 
+    border-top: 1px solid var(--line); 
+    background: var(--side);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; 
+    font-size: 11px; 
+    color: var(--green); 
+    min-height: 18px; 
+    flex: none; 
+  }
+  #sidebar-expand-btn {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    z-index: 100;
+    background: #0f172a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--txt);
+    width: 32px;
+    height: 32px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: all 0.15s;
+  }
+  #sidebar-expand-btn:hover {
+    border-color: var(--brand);
+    color: #fff;
+  }
+  
+  /* Direction B Discover Grid Styles */
+  .discover-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 24px;
+    overflow: auto;
+  }
+  #discover-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+  }
+  .pkg-card {
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .pkg-card:hover {
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.6);
+  }
+  .pkg-card.active {
+    border-color: var(--brand) !important;
+    background: rgba(59, 130, 246, 0.08) !important;
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.15);
+  }
+  
+  /* Subscriber Tier Badges */
+  .tier-badge {
+    font-size: 8px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+  }
+  .tier-badge.gold {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+  .tier-badge.silver {
+    background: rgba(148, 163, 184, 0.15);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #cbd5e1;
+  }
+  .tier-badge.bronze {
+    background: rgba(180, 83, 9, 0.15);
+    border: 1px solid rgba(180, 83, 9, 0.4);
+    color: #b45309;
+  }
+  .tier-badge.none {
+    display: none;
+  }
+  
+  /* Filter Chips Styles */
+  .chips-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .chip {
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.12s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .chip:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+  .chip.active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .chip.active.brand {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--brand);
+  }
+  .chip .close {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  .ws-user {
+    padding: 10px 12px;
+    margin: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+  .ws-user:hover {
+    border-color: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.02);
+  }
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    font-size: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    transition: all 0.15s;
+  }
+  .user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .user-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .user-status {
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .user-status::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #64748b;
+  }
+  .ws-user.connected .user-avatar {
+    background: var(--green) !important;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4) !important;
+  }
+  .ws-user.connected .user-status::before {
+    background: var(--green) !important;
+    box-shadow: 0 0 4px var(--green);
+  }
+  
+  /* Dropdown Menu styling (Claude style) */
+  .profile-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 8px;
+    right: 8px;
+    background: #0f172a;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.8);
+    display: none;
+    flex-direction: column;
+    padding: 6px;
+    z-index: 999;
+    animation: slideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(5px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .profile-menu .menu-email {
+    padding: 8px 10px;
+    font-size: 10px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .profile-menu .menu-item {
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.12s;
+  }
+  .profile-menu .menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+  }
+  .profile-menu .menu-item.logout {
+    color: var(--red);
+  }
+  .profile-menu .menu-item.logout:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--red);
+  }
+</style>
+</head>
+<body>
+  <div id="shell">
+    <aside id="ws-sidebar">
+      <div class="ws-head" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Navigation</span>
+        <button id="ws-collapse-btn" title="Collapse Sidebar" style="background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:2px 6px; transition:color 0.15s; margin-right: -4px;">«</button>
+      </div>
+      <div id="ws-nav-discover" class="ws-item active">
+        <div class="sdot" style="background:var(--brand); box-shadow: 0 0 6px var(--brand);"></div>
+        <span class="nm" style="color:#fff; font-weight:600;">🔍 Discover Portal</span>
+      </div>
+      <div class="ws-head" style="margin-top:12px;">Workspaces <span class="count" id="ws-count">0</span></div>
+      <div id="ws-list"><div class="ws-empty">—</div></div>
+      <div class="ws-foot">
+        <div id="ws-add-menu" style="display:none"></div>
+        <button id="ws-add" title="Clone a workspace from the portal to this computer">&#43; Clone workspace</button>
+      </div>
+      <div style="position:relative; margin-top:auto;">
+        <div id="profile-dropdown" class="profile-menu">
+          <div class="menu-email" id="menu-email">guest@pubpascal.dev</div>
+          <div class="menu-item" id="menu-settings">
+            <span style="font-size:12px;">⚙</span> Configurações
+          </div>
+          <div class="menu-item logout" id="menu-logout">
+            <span style="font-size:12px;">🔌</span> Desconectar Conta (Sair)
+          </div>
+        </div>
+        <div id="ws-user" class="ws-user" title="Account settings">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info">
+            <div class="user-name" id="user-name">Guest Developer</div>
+            <div class="user-status" id="user-status">Disconnected</div>
+          </div>
+          <span style="font-size:8px; color:var(--muted); margin-right: 4px; user-select:none;">▼</span>
+        </div>
+      </div>
+    </aside>
+    <div id="main" style="display:flex; flex:1; min-width:0; flex-direction:column; position:relative;">
+      <button id="sidebar-expand-btn" title="Expand Sidebar">»</button>
+      <!-- Cockpit Graph View -->
+      <div id="graph-view" style="display:none; flex:1; flex-direction:column; min-width:0;">
+        <header>
+        <span class="dot"></span>
+        <h1>PubPascal <span id="ws-title" style="color:var(--muted);font-weight:400">—</span></h1>
+        <button id="pull" title="Pull --ff-only on every repo in the workspace (never overwrites; skips dirty ones)">&#8595; Pull</button>
+        <button id="commit-btn" title="Commit (add -A + commit) on every repo with changes">&#10003; Commit</button>
+        <button id="diff-btn" title="View uncommitted changes (git diff HEAD)">&#177; Diff</button>
+        <button id="refresh" title="Re-run the CLI (workspace status) and refresh the graph">&#8635; Refresh</button>
+        <button id="setup-btn" title="Settings (Login / Installation / Contribution)">⚙ Settings</button>
+        <span class="env" id="host">view: browser</span>
+      </header>
+      <div id="commit-bar" style="display:none">
+        <input id="commit-msg" type="text" placeholder="Commit message…" />
+        <button id="commit-go">Commit</button>
+        <button id="commit-cancel" title="Cancel">&#10005;</button>
+      </div>
+      <div id="canvas">
+        <svg class="edges" id="edges"></svg>
+        <div id="err-card">
+          <div class="card">
+            <div class="icon">&#9888;</div>
+            <h2 id="err-title"></h2>
+            <p id="err-hint"></p>
+            <div id="err-login" style="display:none">
+              <input id="login-token" type="password" placeholder="Paste your token (pdv_...)" />
+              <button id="login-go">Sign in</button>
+              <a href="https://www.pubpascal.dev/profile/tokens" target="_blank" rel="noreferrer">Generate a token on the portal &#8599;</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Clone Modal (Stable vs Contribution choice) -->
+        <div id="clone-modal" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; z-index:15; background:rgba(11,18,32,.85);">
+          <div class="card" style="max-width:440px; text-align:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px 26px;">
+            <h2 style="font-size:15px; margin:0 0 8px; color:var(--txt); font-weight:700;">Clone Workspace</h2>
+            <p style="font-size:12px; color:var(--muted); margin:0 0 16px; line-height:1.5;">Select how you want to download and configure this workspace locally:</p>
+            
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:18px;">
+              <!-- Option Consume Only -->
+              <div id="clone-mode-use" class="mi" style="padding:10px 12px; border:1px solid var(--line); border-radius:8px; text-align:left; cursor:pointer; background:#111827;">
+                <div style="font-weight:700; font-size:12px; color:var(--green); display:flex; align-items:center; gap:5px;">✔ Consume Only (Stable)</div>
+                <div style="font-size:11px; color:var(--muted); margin-top:3px; line-height:1.35;">Clones stable official versions for consumption. No GitHub keys or login required.</div>
+              </div>
+              
+              <!-- Option Contribute -->
+              <div id="clone-mode-contrib" class="mi" style="padding:10px 12px; border:1px solid var(--line); border-radius:8px; text-align:left; cursor:pointer; background:#111827;">
+                <div style="font-weight:700; font-size:12px; color:var(--brand); display:flex; align-items:center; gap:5px;">⚙ Contribute (Developer)</div>
+                <div style="font-size:11px; color:var(--muted); margin-top:3px; line-height:1.35;">Prepares the workspace by creating forks on your personal GitHub for submitting Pull Requests.</div>
+              </div>
+            </div>
+            
+            <button id="clone-cancel" style="cursor:pointer; font-size:11px; font-weight:600; border:1px solid var(--line); background:#111827; color:var(--txt); border-radius:7px; padding:6px 16px;">Cancel</button>
+          </div>
+        </div>
+        
+        <!-- Settings Modal (Portal Token Setup) -->
+        <div id="settings-modal" class="modal-overlay" style="display:none;">
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3>Portal Authentication</h3>
+              <button class="modal-close-btn" id="settings-close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p style="font-size:12px; color:var(--muted); margin:0 0 14px; line-height:1.5;">
+                Connect your portal account token (`pdv_...`) to access workspaces and write contributions.
+              </p>
+              <div class="settings-form" style="margin-top:14px;">
+                <label style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:6px;">Auth Token</label>
+                <input id="settings-token" type="password" placeholder="Paste pdv_... token" style="width:100%; background:#070c16; border:1px solid var(--line); color:#fff; border-radius:8px; padding:10px 12px; font-size:12px; font-family:ui-monospace, monospace; margin-bottom:14px;" />
+                <button id="settings-save" style="width:100%; cursor:pointer; font-size:12px; font-weight:600; border:1px solid var(--brand); background:var(--brand); color:#fff; border-radius:8px; padding:10px; transition:filter 0.15s;">Connect Account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- End of canvas -->
+      <div id="log">ready.</div>
+      <div id="diff-overlay" style="display:none">
+        <div id="diff-head">
+          <span>&#177; Diff — uncommitted changes (vs HEAD)</span>
+          <button id="diff-close">&#10005; Close</button>
+        </div>
+        <div id="diff-body"></div>
+      </div>
+    </div>
+    <!-- End of Cockpit Graph View -->
+    
+    <!-- Discover Search Catalog View -->
+    <div id="discover-view" style="display:flex; flex:1; height:100%; min-width:0;">
+      <div class="discover-container" style="display:flex; flex:1; height:100%; min-width:0; width:100%;">
+        
+        <!-- Middle Packages Grid / List (Direction B style) -->
+        <div class="discover-content">
+          <div class="search-bar" style="margin-bottom:14px; display:flex; gap:10px; align-items:center;">
+            <input id="discover-search" type="text" placeholder="🔍 search Delphi / Lazarus packages..." style="flex:1; background:#0f172a; border:1px solid var(--line); border-radius:10px; padding:12px 16px; color:#fff; font-size:13px;" />
+            <div style="font-size:11px; color:var(--muted); font-weight:600; white-space:nowrap;" id="discover-count-indicator">loading packages...</div>
+            <button style="background:#0f172a; border:1px solid var(--line); border-radius:10px; color:var(--muted); padding:10px 16px; font-size:12px; font-weight:600; cursor:pointer;">sort: ★ stars</button>
+          </div>
+          
+          <!-- Horizontal Filter Chips (Direction B style) -->
+          <div class="chips-row">
+            <div class="chip active" id="chip-delphi">Delphi <span class="close">&times;</span></div>
+            <div class="chip active" id="chip-lazarus">Lazarus / FPC <span class="close">&times;</span></div>
+            <div class="chip active" id="chip-workspace">Has Workspace <span class="close">&times;</span></div>
+            <div class="chip" id="chip-sbom">+ SBOM</div>
+            <div class="chip" id="chip-license">MIT License</div>
+          </div>
+          
+          <div id="discover-list">
+            <!-- Packages are loaded dynamically via window.loadCatalog -->
+          </div>
+        </div>
+        
+        <!-- Right Detail Sidebar Panel -->
+        <div class="discover-detail" id="discover-detail-panel" style="width:280px; border-left:1px solid var(--line); padding:20px; background:#090e18; display:flex; flex-direction:column; gap:20px; overflow:auto; flex-shrink:0;">
+          <div>
+            <h3 id="detail-name" style="margin:0 0 4px; font-size:16px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">Janus <span class="tier-badge gold" id="detail-tier-badge">gold</span></h3>
+            <a id="detail-url" href="https://github.com/ModernDelphiWorks/Janus" target="_blank" style="font-size:11px; color:var(--brand); text-decoration:none; word-break:break-all;">github.com/ModernDelphiWorks/Janus</a>
+          </div>
+          
+          <div>
+            <h4 style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin:0 0 10px; letter-spacing:0.5px;">Workspace &middot; 5 dependencies</h4>
+            <!-- Mini dependencies tree graphic container -->
+            <div id="detail-tree-container" style="border:1px solid var(--line); border-radius:10px; padding:12px; background:#0f172a; font-size:11px;">
+              <div style="font-weight:700; color:#fff; margin-bottom:6px;">★ Janus</div>
+              <div style="padding-left:12px; border-left:1px solid var(--line); display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+                <div>└─ DataEngine</div>
+                <div>└─ FluentQuery</div>
+                <div>└─ FluentSQL</div>
+                <div>└─ Horse</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <h4 style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin:0; letter-spacing:0.5px;">Download Mode</h4>
+            
+            <!-- Stable Mode Toggle -->
+            <div id="mode-select-stable" class="mode-select-card active" style="padding:10px; border:2px solid var(--brand); border-radius:10px; cursor:pointer; background:#0f172a; display:flex; align-items:center; gap:8px;">
+              <div style="width:16px; height:16px; border-radius:50%; border:2px solid var(--brand); display:flex; align-items:center; justify-content:center; flex-shrink:0;"><div style="width:8px; height:8px; border-radius:50%; background:var(--brand);"></div></div>
+              <div>
+                <div style="font-weight:700; font-size:11px; color:#fff;">Stable (somente uso)</div>
+                <div style="font-size:9px; color:var(--muted); margin-top:2px;">No credentials required. Stable release.</div>
+              </div>
+            </div>
+            
+            <!-- Fork & Contribute Mode Toggle -->
+            <div id="mode-select-contrib" class="mode-select-card" style="padding:10px; border:1px solid var(--line); border-radius:10px; cursor:pointer; background:#0f172a; display:flex; align-items:center; gap:8px;">
+              <div style="width:16px; height:16px; border-radius:50%; border:2px solid var(--muted); display:flex; align-items:center; justify-content:center; flex-shrink:0;"></div>
+              <div>
+                <div style="font-weight:700; font-size:11px; color:#fff;">Fork & Contribute</div>
+                <div style="font-size:9px; color:var(--muted); margin-top:2px;">Setup personal fork for PR submissions.</div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; margin:0 0 6px; letter-spacing:0.5px;">Version</h4>
+            <select id="detail-version-select" style="width:100%; background:#0f172a; border:1px solid var(--line); color:#fff; border-radius:8px; padding:8px 10px; font-size:12px;">
+              <option>v2.22.5 (pinned)</option>
+              <option>v2.22.4</option>
+              <option>v2.22.0</option>
+            </select>
+          </div>
+          
+          <button id="download-ws-btn" style="margin-top:auto; width:100%; cursor:pointer; font-size:12px; font-weight:700; border:0; background:var(--brand); color:#fff; border-radius:10px; padding:12px; transition:filter 0.15s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+            ⬇ Baixar workspace &middot; 6 repos
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- End of Discover Search Catalog View -->
+    </div>
+  </div>
+
+<script>
+// ─── Data contract ──────────────────────────────────────────────────────────
+// The node shape is exactly what `pp workspace status --json` emits, so
+// the host can pipe the CLI output straight into window.loadGraph below.
+//   { id, name, root?, ref, branch, dirty, ahead, behind, missing? }
+// x/y are optional UI layout — auto-computed when absent (the CLI has no layout).
+// The array below is just a placeholder until the host injects real status.
+let NODES = [
+  { id:"janus",       name:"Janus",       root:true, ref:"v2.22.5", branch:"main", dirty:false, ahead:0, behind:0 },
+  { id:"dataengine",  name:"DataEngine",  ref:"main", branch:"main", dirty:false, ahead:0, behind:0 },
+  { id:"fluentquery", name:"FluentQuery", ref:"main", branch:"main", dirty:true,  ahead:2, behind:1 },
+  { id:"metadbdiff",  name:"MetaDbDiff",  ref:"main", branch:"main", dirty:false, ahead:0, behind:0 },
+  { id:"fluentsql",   name:"FluentSQL",   ref:"main", branch:"main", dirty:false, ahead:0, behind:0 },
+  { id:"jsonflow",    name:"JsonFlow",    ref:"main", branch:"main", dirty:false, ahead:0, behind:0 },
+];
+
+// Workspace list (manages N), the currently selected one, and the dropdown→sidebar.
+let WORKSPACES = [];
+let activeWs = null;
+
+const BADGE = { tag:"pinned", clean:"clean", dirty:"dirty", missing:"missing" };
+
+// Badge state derived from the live git fields the CLI reports.
+function nodeState(n){
+  if (n.missing) return "missing";
+  if (n.dirty) return "dirty";
+  if (n.root && /^v?\d/.test(n.ref || "")) return "tag"; // pinned tag (PAI)
+  return "clean";
+}
+
+// Auto-layout when the payload carries no x/y. Columns adapt to the canvas width
+// (narrower now that the sidebar takes its share): PAI centered on top, deps in
+// rows below. Mutates the nodes (assigns x/y) and returns them.
+function layout(nodes){
+  const deps = nodes.filter(n => !n.root);
+  const w = (canvas && canvas.clientWidth) || 700;
+  const cols = Math.max(1, Math.min(3, Math.floor((w - 40) / 230)));
+  const span = cols * 230 - 20;
+  const x0 = Math.max(20, (w - span) / 2);
+  for (const n of nodes){
+    if (typeof n.x === "number" && typeof n.y === "number") continue;
+    if (n.root){ n.x = Math.max(20, (w - 210) / 2); n.y = 30; continue; }
+    const i = deps.indexOf(n);
+    n.x = x0 + (i % cols) * 230;
+    n.y = 210 + Math.floor(i / cols) * 150;
+  }
+  return nodes;
+}
+
+// ─── Bridge ───────────────────────────────────────────────────────────────────
+// Inside Delphi's TEdgeBrowser, window.chrome.webview.postMessage delivers JSON
+// to the WebMessageReceived event — the SAME page drives the native CLI.
+const inDelphi = !!(window.chrome && window.chrome.webview);
+document.getElementById("host").textContent = inDelphi ? "view: Delphi (WebView2)" : "view: browser";
+function toHost(action, node){
+  const msg = node ? { action, node } : { action };
+  if (inDelphi) window.chrome.webview.postMessage(JSON.stringify(msg));
+  log(`→ host: ${action}${node ? `(${node})` : ""}` + (inDelphi ? "" : "  [no Delphi: would run the CLI]"));
+}
+function log(s){ document.getElementById("log").textContent = s; }
+
+const canvas = document.getElementById("canvas");
+const svg = document.getElementById("edges");
+
+// ─── Render (idempotent) ──────────────────────────────────────────────────────
+// Clears and rebuilds from NODES, so the host can re-inject on every refresh
+// without duplicating anything.
+function render(){
+  canvas.querySelectorAll(".node").forEach(el => el.remove());
+  svg.innerHTML = "";
+
+  const root = NODES.find(n => n.root);
+  document.getElementById("ws-title").textContent =
+    root ? `— ${root.name.toLowerCase()}@${root.ref || "?"}` : "—";
+
+  for (const n of NODES){
+    const st = nodeState(n);
+    const el = document.createElement("div");
+    el.className = "node" + (n.root ? " root" : "");
+    el.dataset.node = n.id;
+    el.style.left = n.x + "px"; el.style.top = n.y + "px";
+
+    const track = [];
+    if (n.branch && n.branch !== n.ref) track.push(n.branch);
+    if (n.ahead)  track.push("↑" + n.ahead);
+    if (n.behind) track.push("↓" + n.behind);
+    const trackStr = track.length ? ` &middot; <span class="track">${track.join(" ")}</span>` : "";
+
+    el.innerHTML =
+      `<div class="name">${n.root ? "★ " : ""}${n.name}
+          <span class="ver">${n.ref || "—"}${(n.version && n.version !== n.ref) ? ` <span style="color:var(--muted);font-weight:400">· ${n.version}</span>` : ""}</span></div>
+       <div class="meta"><span class="badge ${st}">${BADGE[st]}</span>
+          ${n.root ? " &middot; PAI" : " &middot; modules/" + n.id}${trackStr}</div>
+        <div class="actions">
+           ${!n.root ? `<button data-a="contribute-node" data-n="${n.id}">Contribute</button>` : ''}
+           ${!n.root && n.writable ? `<span title="You publish this package, so you can push straight to its origin — no fork needed." style="font-size:10px;color:var(--muted);font-weight:700;margin:auto auto;padding:5px 0;letter-spacing:0.3px;">direct push</span>` : ''}
+           ${n.dirty ? `<button data-a="pr-node" data-n="${n.id}">Submit PR</button>` : ''}
+        </div>`;
+    canvas.appendChild(el);
+  }
+
+  // Dependency edges (PAI -> dep).
+  const center = id => { const n = NODES.find(x => x.id === id); return n ? { x:n.x+105, y:n.y+45 } : null; };
+  if (root){
+    for (const n of NODES){
+      if (n.root) continue;
+      const p1 = center(root.id), p2 = center(n.id);
+      if (!p1 || !p2) continue;
+      const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+      path.setAttribute("d", `M${p1.x},${p1.y+45} C${p1.x},${p1.y+110} ${p2.x},${p2.y-70} ${p2.x},${p2.y}`);
+      path.setAttribute("stroke","#334155"); path.setAttribute("fill","none"); path.setAttribute("stroke-width","2");
+      svg.appendChild(path);
+    }
+  }
+}
+
+// Tint the active workspace's sidebar dot from the graph just loaded — visited
+// workspaces light up green (clean) or amber (has changes). Unvisited stay gray
+// until you open them (a full per-workspace status sweep is a later step).
+function tintActiveDot(){
+  if (!activeWs) return;
+  const dot = document.querySelector(`#ws-list .ws-item[data-ws="${activeWs}"] .sdot`);
+  if (!dot) return;
+  const dirty = NODES.some(n => n.dirty || n.missing);
+  dot.style.background = dirty ? "var(--amber)" : "var(--green)";
+}
+
+// ─── ★ Data-injection hook ────────────────────────────────────────────────────
+// The Delphi host calls this via ExecuteScript right after running
+// `pp workspace status --json`. Also callable from the browser console for
+// testing. Accepts a { nodes:[...] } object, a bare [...] array, or a JSON string.
+const WS_PINNED_REF = {};
+window.loadGraph = function(payload){
+  try {
+    const data  = (typeof payload === "string") ? JSON.parse(payload) : payload;
+    const nodes = Array.isArray(data) ? data : (data && data.nodes);
+    if (!Array.isArray(nodes)){ log("loadGraph: payload missing nodes[]"); return; }
+    // Default the git fields so a partial payload still renders.
+    NODES = layout(nodes.map(n => ({ dirty:false, ahead:0, behind:0, ...n })));
+    // Remember the ref each repo is pinned to, so the detail panel can state the
+    // real version instead of a placeholder. Graph ids are directory names
+    // ("Janus"); catalog slugs are lowercase ("janus").
+    for (const n of NODES) {
+      if (n.id) WS_PINNED_REF[String(n.id).toLowerCase()] = n.version || n.ref || "";
+    }
+    render();
+    tintActiveDot();
+    const dirty = NODES.filter(n => n.dirty).length;
+    log(`✓ status: ${NODES.length} repos · ${dirty} with changes`);
+  } catch (err){ log("loadGraph error: " + err.message); }
+};
+
+// ─── ★ Workspace list hook (the sidebar) ──────────────────────────────────────
+// The Delphi host injects the list from `pp workspace list --json`. Builds
+// the sidebar; the first workspace is the active one (the app auto-loaded it).
+// Clicking a row asks the host to switch (re-runs status for that workspace).
+window.loadWorkspaces = function(payload){
+  try {
+    const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+    WORKSPACES = (data && data.workspaces) || [];
+    document.getElementById("ws-count").textContent = WORKSPACES.length;
+    const list = document.getElementById("ws-list");
+    list.innerHTML = "";
+    if (!WORKSPACES.length){ 
+      list.innerHTML = '<div class="ws-empty">no workspaces</div>'; 
+      showDiscoverTab();
+      return; 
+    }
+    if (!activeWs || !WORKSPACES.some(w => w.id === activeWs)) activeWs = WORKSPACES[0].id;
+    for (const w of WORKSPACES){
+      const el = document.createElement("div");
+      el.className = "ws-item" + (w.id === activeWs ? " active" : "");
+      el.dataset.ws = w.id;
+      el.innerHTML = `<span class="sdot"></span><span class="nm" title="${w.name}">${w.name}</span>`;
+      list.appendChild(el);
+    }
+    tintActiveDot();
+    showGraphTab(activeWs);
+  } catch (err){ log("loadWorkspaces error: " + err.message); }
+};
+
+// ★ Per-workspace status dot (the sweep). The host runs `status <id>` for every
+// workspace and calls this for each, so the WHOLE sidebar shows real state — not
+// just the one you opened. green clean / amber changes / gray not-cloned.
+window.setWorkspaceDot = function(id, state){
+  const dot = document.querySelector(`#ws-list .ws-item[data-ws="${id}"] .sdot`);
+  if (!dot) return;
+  const colors = { clean:"var(--green)", dirty:"var(--amber)", missing:"#475569" };
+  dot.style.background = colors[state] || "#475569";
+};
+
+let IS_CONNECTED = false;
+
+window.updateUserStatus = function(connected, email){
+  IS_CONNECTED = !!connected;
+  const userRow = document.getElementById("ws-user");
+  const avatar = document.getElementById("user-avatar");
+  const name = document.getElementById("user-name");
+  const status = document.getElementById("user-status");
+  const menuEmail = document.getElementById("menu-email");
+  
+  if (connected) {
+    userRow.classList.add("connected");
+    avatar.textContent = "D";
+    avatar.style.background = "var(--green)";
+    avatar.style.boxShadow = "0 0 8px rgba(16, 185, 129, 0.4)";
+    name.textContent = "Developer Account";
+    status.textContent = "Connected";
+    menuEmail.textContent = email || "developer@pubpascal.dev";
+  } else {
+    userRow.classList.remove("connected");
+    avatar.textContent = "?";
+    avatar.style.background = "var(--brand)";
+    avatar.style.boxShadow = "0 0 8px rgba(59, 130, 246, 0.4)";
+    name.textContent = "Guest Developer";
+    status.textContent = "Disconnected";
+    menuEmail.textContent = "guest@pubpascal.dev";
+  }
+}
+
+// ★ Error card — the host shows a blocking message (not logged in / no CLI / no
+// workspace here) and hides it on the next successful status. `code` spans render.
+window.showError = function(title, hint, showLogin){
+  document.getElementById("err-title").textContent = title || "Something went wrong";
+  document.getElementById("err-hint").innerHTML = (hint || "").replace(/`([^`]+)`/g, '<code>$1</code>');
+  document.getElementById("err-card").style.display = "flex";
+  if (showLogin) {
+    updateUserStatus(false);
+    document.getElementById("settings-modal").style.display = "flex";
+    document.getElementById("settings-token").focus();
+  }
+};
+window.hideError = function(){ 
+  document.getElementById("err-card").style.display = "none"; 
+  updateUserStatus(true);
+};
+window.clearError = function(){
+  document.getElementById("err-card").style.display = "none";
+  document.getElementById("settings-modal").style.display = "none";
+  updateUserStatus(true);
+};
+
+// ─── Results coming BACK from the host ────────────────────────────────────────
+// A per-node action result updates that node's badge; a {type:"graph"} message is
+// a full refresh routed through loadGraph (an alternative to ExecuteScript).
+if (inDelphi){
+  window.chrome.webview.addEventListener("message", e => {
+    let m; try { m = JSON.parse(e.data); } catch { return; }
+    if (!m) return;
+    if (m.type === "graph"){ window.loadGraph(m); return; }
+    if (m.type !== "result") return;
+    log(`✓ host: ${m.action}(${m.node}) — ${m.ok ? "ok" : "failed"}`);
+    const badge = document.querySelector(`.node[data-node="${m.node}"] .badge`);
+    if (badge && m.action === "push" && m.ok){ badge.className = "badge clean"; badge.textContent = "pushed"; }
+  });
+}
+
+// Clicks: per-node buttons, the Refresh button, the sidebar rows, the + button.
+canvas.addEventListener("click", e => {
+  const b = e.target.closest("button[data-a]");
+  if (b) toHost(b.dataset.a, b.dataset.n);
+});
+document.getElementById("refresh").addEventListener("click", () => toHost("refresh-status"));
+document.getElementById("pull").addEventListener("click", () => toHost("pull-all"));
+
+// Settings Modal interactions
+const settingsModal = document.getElementById("settings-modal");
+const settingsToken = document.getElementById("settings-token");
+
+function openSettings() {
+  toHost("open-login-dialog");
+}
+document.getElementById("setup-btn").addEventListener("click", openSettings);
+
+const profileDropdown = document.getElementById("profile-dropdown");
+
+document.getElementById("ws-user").addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!IS_CONNECTED) {
+    toHost("open-login-dialog");
+  } else {
+    const isShowing = profileDropdown.style.display === "flex";
+    profileDropdown.style.display = isShowing ? "none" : "flex";
+  }
+});
+
+document.addEventListener("click", () => {
+  if (profileDropdown) profileDropdown.style.display = "none";
+});
+
+document.getElementById("menu-settings").addEventListener("click", (e) => {
+  e.stopPropagation();
+  profileDropdown.style.display = "none";
+  toHost("open-login-dialog");
+});
+
+document.getElementById("menu-logout").addEventListener("click", (e) => {
+  e.stopPropagation();
+  profileDropdown.style.display = "none";
+  toHost("logout");
+});
+
+// Commit: the button reveals a message bar; submitting commits every dirty repo.
+const commitBtn = document.getElementById("commit-btn");
+const commitBar = document.getElementById("commit-bar");
+const commitMsg = document.getElementById("commit-msg");
+commitBtn.addEventListener("click", () => {
+  const open = commitBar.style.display !== "none";
+  commitBar.style.display = open ? "none" : "flex";
+  if (!open) commitMsg.focus();
+});
+function doCommit(){
+  const msg = commitMsg.value.replace(/["\r\n]/g, " ").trim();
+  if (!msg){ log("Write a commit message."); return; }
+  commitBar.style.display = "none"; commitMsg.value = "";
+  toHost("commit-all", msg);
+  log("committing repos with changes…");
+}
+document.getElementById("commit-go").addEventListener("click", doCommit);
+document.getElementById("commit-cancel").addEventListener("click", () => { commitBar.style.display = "none"; commitMsg.value = ""; });
+commitMsg.addEventListener("keydown", (e) => { if (e.key === "Enter") doCommit(); });
+
+// Diff: the button asks the host for the diff; loadDiff renders it in an overlay,
+// coloring added (+) green, removed (-) red, and hunk headers (@@) blue.
+const diffOverlay = document.getElementById("diff-overlay");
+document.getElementById("diff-btn").addEventListener("click", () => { toHost("diff-all"); log("loading diff…"); });
+document.getElementById("diff-close").addEventListener("click", () => { diffOverlay.style.display = "none"; });
+window.loadDiff = function(payload){
+  try {
+    const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+    const repos = (data && data.repos) || [];
+    const body = document.getElementById("diff-body");
+    body.innerHTML = "";
+    if (!repos.length){
+      body.innerHTML = '<div class="diff-empty">Nothing to diff — every repo is clean.</div>';
+    }
+    for (const r of repos){
+      const wrap = document.createElement("div"); wrap.className = "diff-repo";
+      const h = document.createElement("h3"); h.textContent = r.name; wrap.appendChild(h);
+      const pre = document.createElement("pre");
+      if (!r.diff || !r.diff.trim()){
+        pre.innerHTML = '<span style="color:var(--muted)">(untracked changes — no diff vs HEAD)</span>';
+      } else {
+        pre.innerHTML = r.diff.split("\n").map(line => {
+          const esc = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+          let c = "";
+          if (line.startsWith("+") && !line.startsWith("+++")) c = "var(--green)";
+          else if (line.startsWith("-") && !line.startsWith("---")) c = "var(--red)";
+          else if (line.startsWith("@@")) c = "var(--brand)";
+          return c ? `<span style="color:${c}">${esc}</span>` : esc;
+        }).join("\n");
+      }
+      wrap.appendChild(pre); body.appendChild(wrap);
+    }
+    diffOverlay.style.display = "flex";
+  } catch (err){ log("loadDiff error: " + err.message); }
+};
+document.getElementById("ws-list").addEventListener("click", e => {
+  const item = e.target.closest(".ws-item");
+  if (!item) return;
+  showGraphTab(item.dataset.ws);
+});
+// + Clonar workspace: a popup lists every workspace; picking one asks the host
+// to run `workspace clone <id>` (which clones the PAI + deps) and refresh.
+const addBtn = document.getElementById("ws-add");
+const addMenu = document.getElementById("ws-add-menu");
+addBtn.addEventListener("click", () => {
+  if (addMenu.style.display === "block"){ addMenu.style.display = "none"; return; }
+  if (!WORKSPACES.length){ log("No workspaces to clone — sign in to the portal first."); return; }
+  addMenu.innerHTML = '<div class="mh">Clone which workspace?</div>';
+  for (const w of WORKSPACES){
+    const mi = document.createElement("div");
+    mi.className = "mi"; mi.dataset.ws = w.id;
+    mi.textContent = w.name;
+    addMenu.appendChild(mi);
+  }
+  addMenu.style.display = "block";
+});
+let pendingWsId = null;
+
+addMenu.addEventListener("click", (e) => {
+  const mi = e.target.closest(".mi");
+  if (!mi) return;
+  addMenu.style.display = "none";
+  pendingWsId = mi.dataset.ws;
+  document.getElementById("clone-modal").style.display = "flex";
+});
+
+document.getElementById("clone-mode-use").addEventListener("click", () => {
+  if (pendingWsId) {
+    document.getElementById("clone-modal").style.display = "none";
+    toHost("clone-workspace", pendingWsId);
+    log("cloning workspace (stable)...");
+    pendingWsId = null;
+  }
+});
+
+document.getElementById("clone-mode-contrib").addEventListener("click", () => {
+  if (pendingWsId) {
+    document.getElementById("clone-modal").style.display = "none";
+    // Check if the user is authenticated by inspecting error card visibility
+    const needsLogin = document.getElementById("err-card").style.display === "flex" && 
+                       document.getElementById("err-login").style.display === "flex";
+                       
+    if (needsLogin) {
+      log("Warning: Connect your portal account before contributing!");
+      openSettings(); // Open settings sidebar automatically
+    } else {
+      toHost("clone-workspace", pendingWsId);
+      log("cloning workspace (contribution mode)...");
+    }
+    pendingWsId = null;
+  }
+});
+
+document.getElementById("clone-cancel").addEventListener("click", () => {
+  document.getElementById("clone-modal").style.display = "none";
+  pendingWsId = null;
+});
+document.addEventListener("click", (e) => { if (!e.target.closest(".ws-foot")) addMenu.style.display = "none"; });
+
+// ─── Collapsible Sidebar ──────────────────────────────────────────────────────
+const sidebar = document.getElementById("ws-sidebar");
+const expandBtn = document.getElementById("sidebar-expand-btn");
+
+document.getElementById("ws-collapse-btn").addEventListener("click", () => {
+  sidebar.classList.add("collapsed");
+  expandBtn.style.display = "flex";
+});
+
+expandBtn.addEventListener("click", () => {
+  sidebar.classList.remove("collapsed");
+  expandBtn.style.display = "none";
+});
+
+// ─── Discover Portal Catalog Logic ───────────────────────────────────────────
+const discoverView = document.getElementById("discover-view");
+const graphView = document.getElementById("graph-view");
+const wsNavDiscover = document.getElementById("ws-nav-discover");
+
+let CURRENT_CATALOG = [];
+let selectedPkg = "janus";
+let selectedMode = "stable"; // "stable" or "contrib"
+
+let searchTimeout;
+const searchInput = document.getElementById("discover-search");
+
+function triggerCatalogSearch() {
+  const query = searchInput.value.trim();
+  
+  // Show premium loading state in grid card container
+  const listEl = document.getElementById("discover-list");
+  listEl.innerHTML = `
+    <div style="grid-column: 1 / -1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 20px; gap: 16px; color: var(--muted);">
+      <div style="width: 28px; height: 28px; border: 3px solid rgba(59, 130, 246, 0.1); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.5px; animation: pulse 1.5s infinite; color: var(--muted);">Reading portal catalog...</span>
+    </div>
+  `;
+
+  toHost("catalog-search", query);
+}
+
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(triggerCatalogSearch, 250);
+});
+
+// Handle Filter Chips interaction (Direction B style)
+document.querySelectorAll(".chips-row .chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    chip.classList.toggle("active");
+    // Perform search refetch
+    triggerCatalogSearch();
+  });
+});
+
+window.loadCatalog = function(payload) {
+  try {
+    const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+    CURRENT_CATALOG = (data && data.packages) || [];
+    
+    const listEl = document.getElementById("discover-list");
+    listEl.innerHTML = "";
+    
+    const countIndicator = document.getElementById("discover-count-indicator");
+    countIndicator.textContent = `${CURRENT_CATALOG.length} package${CURRENT_CATALOG.length !== 1 ? 's' : ''}`;
+    
+    if (!CURRENT_CATALOG.length) {
+      listEl.innerHTML = '<div style="grid-column: 1 / -1; padding:40px; text-align:center; color:var(--muted); font-size:12px;">No packages found in the portal catalog.</div>';
+      return;
+    }
+    
+    CURRENT_CATALOG.forEach(pkg => {
+      const card = document.createElement("div");
+      card.className = "pkg-card" + (pkg.slug === selectedPkg ? " active" : "");
+      card.dataset.pkg = pkg.slug;
+      
+      const tierBadge = pkg.tier !== "none" ? `<span class="tier-badge ${pkg.tier}">${pkg.tier}</span>` : "";
+      const isPai = (pkg.slug === "janus" || pkg.slug === "nidus") ? `<span class="badge clean" style="font-size:8px;">PAI</span>` : "";
+      
+      const scoreVal = pkg.score ?? 0;
+      const scoreColor = scoreVal >= 90 ? "var(--green)" : (scoreVal >= 80 ? "#10b981" : (scoreVal >= 60 ? "var(--amber)" : "var(--muted)"));
+      const scoreBadge = `<span style="color:${scoreColor}; display:flex; align-items:center; gap:3px; font-weight:700;"><span style="font-size:11px;">🏆</span> Score ${scoreVal}%</span>`;
+
+      card.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <h3 style="margin:0; font-size:14px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <span style="color:var(--brand)">✦</span> ${pkg.name}
+            ${isPai}
+          </h3>
+          ${tierBadge}
+        </div>
+        <p style="margin:0; font-size:11px; color:var(--muted); line-height:1.4; flex:1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+          ${pkg.description || "No description provided."}
+        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:var(--muted); margin-top:auto; padding-top:6px; border-top:1px solid rgba(255,255,255,0.03);">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span>★ ${pkg.stars ?? 0}</span>
+            <span>📥 ${pkg.downloads ?? 0}</span>
+          </div>
+          ${scoreBadge}
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+    
+    if (CURRENT_CATALOG.length > 0) {
+      if (!CURRENT_CATALOG.some(p => p.slug === selectedPkg)) {
+        selectPackage(CURRENT_CATALOG[0].slug);
+      } else {
+        selectPackage(selectedPkg);
+      }
+    }
+  } catch (err) {
+    log("loadCatalog error: " + err.message);
+  }
+};
+
+function selectPackage(pkgId) {
+  selectedPkg = pkgId;
+  document.querySelectorAll(".pkg-card").forEach(c => {
+    c.classList.toggle("active", c.dataset.pkg === pkgId);
+  });
+  
+  const pkg = CURRENT_CATALOG.find(p => p.slug === pkgId);
+  if (!pkg) return;
+  
+  document.getElementById("detail-name").innerHTML = `${pkg.name} <span class="tier-badge ${pkg.tier}" id="detail-tier-badge">${pkg.tier}</span>`;
+  
+  const urlEl = document.getElementById("detail-url");
+  const repoUrl = pkg.repository_url || `https://github.com/HashLoad/${pkg.slug}`;
+  urlEl.textContent = repoUrl.replace("https://", "");
+  urlEl.href = repoUrl;
+  
+  // Show loading state for deps while we fetch the full detail
+  const treeContainer = document.getElementById("detail-tree-container");
+  treeContainer.innerHTML = `<div style="color:var(--muted); font-style:italic;">Loading...</div>`;
+
+  // Version selector — reset while loading
+  const verSelect = document.getElementById("detail-version-select");
+  verSelect.innerHTML = `<option>loading...</option>`;
+
+  // Delegate to Delphi host
+  toHost("package-detail", pkgId);
+}
+
+window.loadPackageDetail = function(detail) {
+  const pkg = CURRENT_CATALOG.find(p => p.slug === selectedPkg);
+  if (!pkg) return;
+
+  // The pinned version is the ref the workspace declares, not a literal. This
+  // used to keep the "v1.0.0 (pinned)" loading placeholder forever, so the panel
+  // announced a version the clone never brought.
+  const verSel = document.getElementById("detail-version-select");
+  if (verSel) {
+    const pinned = WS_PINNED_REF[String(pkg.slug).toLowerCase()] || "";
+    verSel.innerHTML = pinned
+      ? `<option>${pinned} (pinned)</option>`
+      : `<option>no pinned version</option>`;
+  }
+
+  const urlEl = document.getElementById("detail-url");
+  const treeContainer = document.getElementById("detail-tree-container");
+
+  if (detail) {
+    Object.assign(pkg, {
+      repository_url: detail.repository_url || pkg.repository_url,
+      workspaces: detail.workspaces ?? [],
+      manifestDeps: detail.dependencies ?? [],
+      cra: detail.cra,
+      sbom: detail.sbom,
+    });
+    if (detail.repository_url) {
+      urlEl.textContent = detail.repository_url.replace("https://", "");
+      urlEl.href = detail.repository_url;
+    }
+  }
+
+  const ws = pkg.workspaces && pkg.workspaces.length > 0 ? pkg.workspaces[0] : null;
+  const deps = ws
+    ? ws.dependencies
+    : (pkg.manifestDeps ?? []).map(d => {
+        const raw = d.name || d.key || "";
+        const label = raw.includes("/") ? raw.split("/").pop() : raw;
+        return { name: label, slug: raw };
+      });
+
+  if (deps.length > 0) {
+    const depRows = deps.map(d => `<div>└─ ${d.name || d.slug}</div>`).join("");
+    treeContainer.innerHTML = `
+      <div style="font-weight:700; color:#fff; margin-bottom:6px;">★ ${pkg.name}</div>
+      <div style="padding-left:12px; border-left:1px solid var(--line); display:flex; flex-direction:column; gap:4px; color:var(--muted);">
+        ${depRows}
+      </div>
+    `;
+  } else {
+    treeContainer.innerHTML = `<div style="color:var(--muted); font-style:italic;">No dependencies declared</div>`;
+  }
+};
+
+
+// Wire up package selection clicks
+document.getElementById("discover-list").addEventListener("click", e => {
+  const card = e.target.closest(".pkg-card");
+  if (card) selectPackage(card.dataset.pkg);
+});
+
+// Toggle download modes
+const modeStable = document.getElementById("mode-select-stable");
+const modeContrib = document.getElementById("mode-select-contrib");
+
+modeStable.addEventListener("click", () => {
+  selectedMode = "stable";
+  modeStable.classList.add("active");
+  modeContrib.classList.remove("active");
+  modeStable.querySelector("div").innerHTML = '<div style="width:8px; height:8px; border-radius:50%; background:var(--brand);"></div>';
+  modeStable.querySelector("div").style.borderColor = "var(--brand)";
+  modeContrib.querySelector("div").innerHTML = '';
+  modeContrib.querySelector("div").style.borderColor = "var(--muted)";
+});
+
+modeContrib.addEventListener("click", () => {
+  selectedMode = "contrib";
+  modeContrib.classList.add("active");
+  modeStable.classList.remove("active");
+  modeContrib.querySelector("div").innerHTML = '<div style="width:8px; height:8px; border-radius:50%; background:var(--brand);"></div>';
+  modeContrib.querySelector("div").style.borderColor = "var(--brand)";
+  modeStable.querySelector("div").innerHTML = '';
+  modeStable.querySelector("div").style.borderColor = "var(--muted)";
+});
+
+// Download button execution
+document.getElementById("download-ws-btn").addEventListener("click", () => {
+  const pkg = CURRENT_CATALOG.find(p => p.slug === selectedPkg);
+  if (!pkg) return;
+  
+  if (selectedMode === "contrib") {
+    const needsLogin = document.getElementById("err-card").style.display === "flex";
+                       
+    if (needsLogin) {
+      log("Warning: Connect your portal account before contributing!");
+      openSettings();
+      return;
+    }
+    toHost("clone-workspace", selectedPkg);
+    log(`cloning workspace ${pkg.name} (contribution mode)...`);
+  } else {
+    toHost("clone-workspace", selectedPkg);
+    log(`cloning workspace ${pkg.name} (stable)...`);
+  }
+});
+
+// View switching
+function showDiscoverTab() {
+  discoverView.style.display = "flex";
+  graphView.style.display = "none";
+  wsNavDiscover.classList.add("active");
+  
+  document.querySelectorAll("#ws-list .ws-item").forEach(x => x.classList.remove("active"));
+  triggerCatalogSearch();
+}
+
+function showGraphTab(workspaceId) {
+  discoverView.style.display = "none";
+  graphView.style.display = "flex";
+  wsNavDiscover.classList.remove("active");
+  
+  activeWs = workspaceId;
+  document.querySelectorAll("#ws-list .ws-item").forEach(x => {
+    x.classList.toggle("active", x.dataset.ws === workspaceId);
+  });
+  toHost("switch-workspace", workspaceId);
+}
+
+wsNavDiscover.addEventListener("click", showDiscoverTab);
+
+// Initial paint (placeholder until the host injects real status).
+layout(NODES);
+render();
+
+// Tell the Delphi host the page is ready (loadGraph is defined) so it can run the
+// CLI and inject the live status + workspace list straight away.
+if (inDelphi) toHost("ready");
+</script>
+</body>
+</html>

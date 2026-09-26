@@ -1,0 +1,78 @@
+name: Esteira sync
+
+on:
+  # Pre-launch: MANUAL ONLY. The pending queue is empty (all packages active)
+  # and there is no third-party publishing yet — the old "*/30 * * * *" cron
+  # burned ~1,400 Actions minutes/month draining an empty queue. When the
+  # portal goes live with real publishers, restore a schedule per ADR-010
+  # (e.g. "0 3 * * *" daily, or "*/30 * * * *" at full throughput).
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Batch size (1–50). Clamped server-side."
+        required: false
+        type: number
+        default: 10
+
+run-name: "Esteira sync — ${{ github.event_name }}${{ inputs.limit && format(' (limit {0})', inputs.limit) || '' }}"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout portal repo
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Esteira sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SYNC_LIMIT: ${{ inputs.limit || '10' }}
+        run: |
+          set -euo pipefail
+          node scripts/esteira/sync.mjs --limit "$SYNC_LIMIT"
+
+      - name: Upload sync summary
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: esteira-sync-summary-${{ github.run_number }}
+          path: esteira-sync-summary.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Append step summary
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ ! -f esteira-sync-summary.json ]]; then
+            echo "esteira-sync-summary.json missing — sync probably failed before writing it." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          batch=$(jq -r '.batch_size' esteira-sync-summary.json)
+          dry=$(jq -r '.dry_run' esteira-sync-summary.json)
+          active=$(jq -r '.totals.active' esteira-sync-summary.json)
+          rejected=$(jq -r '.totals.rejected' esteira-sync-summary.json)
+          errors=$(jq -r '.totals.errors' esteira-sync-summary.json)
+          {
+            echo "## Esteira sync"
+            echo ""
+            echo "- Batch size: \`$batch\` (dry_run: \`$dry\`)"
+            echo "- Totals: active=\`$active\`, rejected=\`$rejected\`, errors=\`$errors\`"
+            echo ""
+            echo "| Slug | Transition | Verdict | Error |"
+            echo "|------|------------|---------|-------|"
+            jq -r '.entries[] | "| \(.slug) | \(.prior_status) → \(.new_status // "—") | \(.verdict // "—") | \(.error // "") |"' esteira-sync-summary.json
+          } >> "$GITHUB_STEP_SUMMARY"

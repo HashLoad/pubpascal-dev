@@ -1,0 +1,13 @@
+{
+  "verdict": "approved_with_warnings",
+  "rules": {
+    "has_readme": "pass",
+    "has_changelog": "warn",
+    "has_examples": "warn",
+    "has_installing": "warn",
+    "has_images": "warn",
+    "has_pascal_sources": "pass",
+    "has_license": "warn",
+    "repo_clonable": "pass"
+  }
+}

@@ -1,0 +1,30 @@
+# Delphi / RAD Studio build output
+*.dcu
+*.exe
+*.bpl
+*.dcp
+*.o
+*.obj
+*.res
+*.map
+*.drc
+*.identcache
+*.local
+*.dsk
+*.tvsconfig
+*.~*
+__history/
+__recovery/
+Win32/
+Win64/
+Android/
+Linux64/
+OSX64/
+*.stackdump
+
+# Inno Setup output
+installer/Output/
+*.iss.bak
+
+# The bundled CLI is built elsewhere (pubpascal-cli); drop it next to the app.
+pp.exe

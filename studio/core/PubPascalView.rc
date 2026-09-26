@@ -1,0 +1,7 @@
+// Shared web views, embedded into BOTH hosts (the desktop exe + the OTA bpl) via
+// {$R PubPascalView.res} in PubPascal.View.pas. Single source of truth — edit
+// these here in core/ and both binaries pick them up on build. Each host loads
+// the one it needs (IPubPascalContext.ViewResource): the Desktop = the workspace
+// git-management graph; the OTA = the package-manager cockpit.
+WORKSPACE_HTML       RCDATA "workspace-graph.html"
+PACKAGE_MANAGER_HTML RCDATA "package-manager.html"

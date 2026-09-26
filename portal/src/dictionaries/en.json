@@ -1,0 +1,724 @@
+{
+  "home": {
+    "meta": {
+      "title": "Discover and Publish Object Pascal Packages — PubPascal-Dev",
+      "description": "PubPascal-Dev is the definitive hub for Object Pascal components, libraries, and extensions. Find high-performance packages for Delphi, Lazarus, C++ Builder, and RAD Studio."
+    },
+    "hero": {
+      "badge": "The New Delphi Package Registry",
+      "titlePrefix": "Discover and Publish Packages for",
+      "titleHighlight": "Object Pascal",
+      "subtitle": "PubPascal is the definitive hub for components, libraries, and extensions. Find high-performance resources for Delphi, Lazarus, and RAD Studio.",
+      "platformsLabel": "Native Multiplatform Support",
+      "filtersLabel": "Filter by IDE or Dialect"
+    },
+    "aefosFold": {
+      "badge": "New in Delphi",
+      "titlePrefix": "AI chat and terminal,",
+      "titleHighlight": "right inside your Delphi IDE",
+      "subtitle": "Aefos AI brings an agentic assistant into RAD Studio — chat with your codebase and run an AI terminal without leaving the editor. Bring your own CLI (Claude Code / Codex). Your code stays on your machine.",
+      "cta": "Get Aefos AI",
+      "ctaAll": "See all apps",
+      "meta": "Free · RAD Studio Delphi 13 · Agent Execution Flow Orchestration System",
+      "ideTitle": "RAD Studio — Customer.pas",
+      "menu": "File · Edit · Search ·",
+      "chatLabel": "Aefos · Chat",
+      "chatUser": "Wrap Save in try/finally so the transaction is safe.",
+      "chatAi": "Done — added try/finally with Rollback on failure.",
+      "chatAiFile": "1 file edited.",
+      "terminalLabel": "terminal ▸ aefos",
+      "terminalCmd": "refactor TCustomer.Save to be transaction-safe",
+      "terminalOut": "applied · 1 file changed · 0 errors"
+    },
+    "announce": {
+      "tag": "New",
+      "text": "AI chat + terminal inside your Delphi IDE — meet Aefos AI",
+      "cta": "Discover"
+    },
+    "features": {
+      "discovery": {
+        "title": "Unified Discovery",
+        "body": "Search and find components indexed across the GitHub ecosystem. Supports multiple compilers such as dcc32, dcc64, and FPC."
+      },
+      "quality": {
+        "title": "Quality & Security",
+        "body": "Verified packages with automated integrity checks, active unit tests, and strict version-compatibility control."
+      },
+      "commercial": {
+        "title": "Commercial & Open Source",
+        "body": "Transparent and differentiated indexing for community open-source projects or premium commercial packages."
+      }
+    },
+    "packages": {
+      "heading": "Featured Packages",
+      "subtitle": "Discover the most popular and most integrated components from the Object Pascal community.",
+      "viewAll": "View all packages",
+      "emptyTitle": "No packages published yet",
+      "emptyBody": "Be the first to index your Object Pascal component, library, or framework on PubPascal."
+    },
+    "partners": {
+      "heading": "Our Official Partners",
+      "subtitle": "Leading companies and foundations that support, sponsor, and drive the Object Pascal ecosystem forward.",
+      "viewAll": "View all partners",
+      "emptyTitle": "Our official partners will be announced soon",
+      "emptyBody": "We're in talks with companies and foundations that support the Object Pascal ecosystem. Check back in a few days for the full list."
+    },
+    "cta": {
+      "title": "Ready to share your Pascal components?",
+      "subtitle": "Join developers from all over the world. Index your Git repository, add multiplatform support, and contribute to the Delphi ecosystem's renaissance.",
+      "publish": "Start Publishing",
+      "docs": "See Integration Guide"
+    }
+  },
+  "search": {
+    "placeholder": "Search components, libraries and frameworks…",
+    "submit": "Search"
+  },
+  "packages": {
+    "meta": {
+      "title": "Delphi and Lazarus Package Catalog",
+      "description": "Browse the full catalog of Object Pascal packages indexed on PubPascal-Dev.",
+      "titleFilteredPrefix": "Packages",
+      "descriptionFilteredPrefix": "Object Pascal packages filtered by"
+    },
+    "heading": "Package Catalog",
+    "subtitle": "Discover and filter components for Delphi, Lazarus, and C++ Builder. Sponsored highlights, sorted by popularity.",
+    "resultsFoundSingular": "package found",
+    "resultsFoundPlural": "packages found",
+    "sort": {
+      "label": "Sort by",
+      "relevant": "Relevant",
+      "newest": "Newest",
+      "stars": "Most stars",
+      "name": "Name (A–Z)"
+    }
+  },
+  "packageDetail": {
+    "meta": {
+      "notFoundTitle": "Package not found",
+      "descriptionFallback": "Object Pascal package indexed on PubPascal-Dev."
+    },
+    "sbom": {
+      "heading": "Software Bill of Materials",
+      "craBadge": "CRA-ready",
+      "explainer": "This package ships a machine-readable SBOM — the component inventory the EU Cyber Resilience Act (CRA) expects. Audit its dependencies and supply-chain risk before you adopt it.",
+      "format": "Format",
+      "attestedBy": "Attested by",
+      "published": "Published",
+      "download": "Download SBOM",
+      "downloadsLabel": "Downloads"
+    },
+    "cra": {
+      "heading": "CRA-readiness",
+      "metOf": "{met} of {total} signals",
+      "complete": "Fully CRA-ready",
+      "explainer": "Trust signals the EU Cyber Resilience Act expects — so you can adopt this package with confidence.",
+      "sbom": "Software Bill of Materials",
+      "securityPolicy": "Security disclosure policy",
+      "maintained": "Actively maintained"
+    },
+    "dependencies": {
+      "heading": "Dependencies",
+      "source": "Declared in pubpascal.json",
+      "anyVersion": "any",
+      "notPublished": "Not on PubPascal — opens GitHub"
+    },
+    "workspace": {
+      "heading": "Workspaces",
+      "anchors": "Anchors a working set",
+      "private": "Private (yours)"
+    },
+    "deprecated": "Deprecated",
+    "sponsor": "Sponsor",
+    "scores": {
+      "breakdownTitle": "Pub Points breakdown",
+      "cards": {
+        "score": "Score",
+        "stars": "Stars",
+        "downloads": "Downloads",
+        "highlight": "Highlight"
+      },
+      "tiers": {
+        "gold": "Gold",
+        "silver": "Silver",
+        "bronze": "Bronze",
+        "none": "No highlight"
+      },
+      "sections": {
+        "repository": "Repository & code",
+        "documentation": "Documentation",
+        "conventions": "Conventions",
+        "examples": "Examples & media"
+      },
+      "rules": {
+        "has_readme": "Has README",
+        "has_changelog": "Has changelog",
+        "has_examples": "Has examples",
+        "has_installing": "Installation instructions",
+        "has_images": "Has images / screenshots",
+        "has_pascal_sources": "Object Pascal sources",
+        "has_license": "Has license",
+        "repo_clonable": "Repository is clonable"
+      },
+      "outcomes": {
+        "pass": "Pass",
+        "warn": "Partial",
+        "fail": "Fail",
+        "not_supported": "Not supported"
+      },
+      "grantedOfMax": "{granted} / {max}",
+      "pointsLabel": "Points",
+      "notValidated": "Not yet validated",
+      "notSupported": "Source not supported"
+    }
+  },
+  "partners": {
+    "meta": {
+      "title": "Partners",
+      "description": "Companies and foundations that support the Object Pascal ecosystem through the PubPascal-Dev portal.",
+      "ogTitle": "Partners — PubPascal-Dev"
+    },
+    "badge": "Ecosystem supporters",
+    "heading": "Our Partners",
+    "subtitle": "Companies, foundations, and initiatives that support the growth of the Object Pascal ecosystem — Delphi, Lazarus, C++ Builder, and RAD Studio.",
+    "cta": "Become a partner",
+    "emptyTitle": "We'll announce our official partners soon",
+    "emptyBody": "We're in conversation with companies and foundations that support the Object Pascal ecosystem. Check back in a few days for the full list.",
+    "apply": {
+      "captchaFailed": "Captcha verification failed. Please complete the challenge and try again.",
+      "captchaError": "Could not verify the captcha right now. Please try again in a moment.",
+      "rateLimited": "Too many applications from your network. Please wait a while and try again."
+    }
+  },
+  "likes": {
+    "like": "Like",
+    "liked": "Liked",
+    "likesCount": "{count} likes",
+    "signInToLike": "Sign in to like",
+    "likesLabel": "Likes"
+  },
+  "workspaces": {
+    "meta": {
+      "title": "Workspaces — PubPascal",
+      "description": "Create and manage your package workspaces.",
+      "editTitle": "Edit Workspace — PubPascal"
+    },
+    "profileLink": "My Workspaces",
+    "visibility": {
+      "private": "Private",
+      "public": "Public"
+    },
+    "list": {
+      "titlePrefix": "My",
+      "titleHighlight": "Workspaces",
+      "subtitle": "Group related packages into a single working set.",
+      "emptyTitle": "No workspaces yet",
+      "emptyBody": "Create your first workspace to group packages that work together.",
+      "createHeading": "New workspace",
+      "createCta": "Create Workspace",
+      "editAction": "Edit",
+      "updatedLabel": "Updated"
+    },
+    "create": {
+      "metaTitle": "Create Workspace — PubPascal",
+      "back": "Back to workspaces",
+      "headingPrefix": "Create",
+      "headingHighlight": "Workspace",
+      "subtitle": "Name your workspace, then build its dependency graph in the editor."
+    },
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. My ORM Stack",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What is this workspace for?",
+      "visibilityLabel": "Visibility",
+      "create": "Create workspace",
+      "creating": "Creating...",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "delete": "Delete workspace",
+      "deleteConfirm": "Delete this workspace? This action cannot be undone.",
+      "rootLabel": "Root repository (PAI)",
+      "rootNone": "— none —",
+      "rootHint": "The main repo this workspace is built around. Dependencies are added below."
+    },
+    "edit": {
+      "back": "Back to workspaces",
+      "headingPrefix": "Edit",
+      "headingHighlight": "Workspace"
+    },
+    "errors": {
+      "id": "Invalid workspace.",
+      "name": "Name is required (max 120 characters).",
+      "description": "Description is too long (max 2000 characters).",
+      "visibility": "Invalid visibility.",
+      "saveFailed": "Could not save the workspace. Please try again.",
+      "linkLabel": "Link label is required (max 120 characters).",
+      "linkUpstream": "Upstream URL is required (max 2000 characters).",
+      "linkForkRequired": "Fork URL is required when write target is 'fork'.",
+      "linkWriteTarget": "Invalid write target. Choose 'fork' or 'none'.",
+      "linkSaveFailed": "Could not save the external link. Please try again.",
+      "nodeLinkNotOwned": "The selected external link does not belong to your account."
+    },
+    "nodes": {
+      "title": "Dependency Nodes",
+      "empty": "No nodes added yet.",
+      "addTitle": "Add Node",
+      "packageLabel": "Package",
+      "refTypeLabel": "Ref Type",
+      "refValueLabel": "Ref Value",
+      "addButton": "Add node",
+      "adding": "Adding...",
+      "removeButton": "Remove",
+      "setRootButton": "Set as root",
+      "rootBadge": "Root",
+      "duplicateNodeError": "This package is already in the workspace.",
+      "addNodeError": "Could not add the node. Please try again.",
+      "targetKindLabel": "Target type",
+      "targetKindPackage": "Package",
+      "targetKindExternal": "External link",
+      "linkLabel": "External link",
+      "linkPlaceholder": "— select a link —"
+    },
+    "links": {
+      "heading": "External Repository Links",
+      "subtitle": "Private repository links you can bind to workspace nodes. Fork URL and write target are never disclosed to viewers.",
+      "labelLabel": "Label",
+      "labelPlaceholder": "e.g. My Private Fork",
+      "upstreamLabel": "Upstream URL",
+      "upstreamPlaceholder": "https://github.com/owner/repo",
+      "forkLabel": "Fork URL (optional)",
+      "forkPlaceholder": "https://github.com/me/my-fork",
+      "writeTargetLabel": "Write target",
+      "writeTargetNone": "None (read-only)",
+      "writeTargetFork": "Fork (push to fork URL)",
+      "add": "Add link",
+      "adding": "Adding...",
+      "empty": "No external links yet.",
+      "remove": "Remove"
+    },
+    "publicView": {
+      "headingPrefix": "Workspace",
+      "headingHighlight": "DAG",
+      "externalNodeLabel": "External repository",
+      "upstreamLabel": "Upstream",
+      "packageNodeLabel": "Package",
+      "emptyNodes": "This workspace has no nodes.",
+      "edgesHeading": "Dependency edges"
+    },
+    "edges": {
+      "title": "Dependency Edges",
+      "empty": "No edges defined yet.",
+      "addTitle": "Add Edge",
+      "fromLabel": "From",
+      "toLabel": "To",
+      "addButton": "Add edge",
+      "adding": "Adding...",
+      "removeButton": "Remove",
+      "cyclicDependencyError": "This edge would create a cycle in the dependency graph.",
+      "addEdgeError": "Could not add the edge. Please try again.",
+      "needsNodesWarning": "Add at least two nodes before creating edges."
+    },
+    "graph": {
+      "heading": "Dependency Graph",
+      "emptyState": "No nodes added to this workspace yet.",
+      "rootLabel": "root",
+      "defaultRefHint": "default branch",
+      "legendPkg": "Package",
+      "legendExt": "External",
+      "addNodePanelTitle": "Add Node",
+      "connectHint": "Drag between handles to connect",
+      "noticeDismiss": "Dismiss",
+      "selectPackagePlaceholder": "— select a package —",
+      "refTypeBranch": "branch",
+      "refTypeTag": "tag",
+      "refTypeVersion": "version",
+      "toolbarAddNode": "Add Node",
+      "toolbarAddLink": "Add Link",
+      "popupAddNodeTitle": "Add Node",
+      "popupAddLinkTitle": "Add Link",
+      "popupClose": "Close",
+      "library": {
+        "title": "Packages",
+        "searchPlaceholder": "Search packages...",
+        "empty": "No packages match.",
+        "allAdded": "All packages added.",
+        "dragHint": "Drag onto the canvas to add as a dependency",
+        "yoursLabel": "Your packages",
+        "othersLabel": "All packages",
+        "pendingTag": "pending"
+      },
+      "editRef": "Edit version pin",
+      "refSave": "Save",
+      "refDefault": "Default",
+      "refValuePlaceholder": "e.g. main, v1.2.0",
+      "toolbarManifest": "Manifest",
+      "popupManifestTitle": "Workspace Manifest",
+      "manifestHint": "What the PubPascal CLI fetches for this workspace.",
+      "manifestLoading": "Loading...",
+      "manifestError": "Could not load the manifest.",
+      "manifestCopy": "Copy",
+      "manifestCopied": "Copied",
+      "refOptionalHint": "Optional — leave empty to track the default branch.",
+      "versionsLoading": "Loading versions...",
+      "versionsNone": "No tags found - type a ref",
+      "bossButton": "Import dependencies",
+      "bossUnavailable": "The root (PAI) repo has no pubpascal.json or boss.json to import.",
+      "bossNoRoot": "Set a root (PAI) package first.",
+      "bossNoFile": "No pubpascal.json or boss.json found in the root repo.",
+      "bossError": "Could not import from boss.json.",
+      "bossNew": "added",
+      "bossExisting": "already there",
+      "bossSkipped": "skipped (not published)",
+      "deleteNode": "Remove node",
+      "cloneHeading": "Clone with the CLI",
+      "cloneByVersionHint": "This workspace's identifier is its root package at the pinned version.",
+      "cloneNoVersion": "Pin the root (PAI) package to a version to clone by version. For now, clone by id:",
+      "cloneCopy": "Copy",
+      "cloneCopied": "Copied",
+      "cloneDownloadCli": "Don't have the CLI yet? Download for Windows"
+    }
+  },
+  "publishValidation": {
+    "readmeTitle": "README check",
+    "readme": {
+      "pass": "README found with enough content.",
+      "warn": "Could not verify the README (non-GitHub repository or fetch error).",
+      "fail": "README missing or shorter than 10 non-blank lines."
+    },
+    "badge": {
+      "pass": "README ✓",
+      "warn": "README ⚠",
+      "fail": "README ✗"
+    }
+  },
+  "common": {
+    "communityPublisher": "Community",
+    "memberSince": "Member since",
+    "avatar": {
+      "changePhoto": "Change photo",
+      "errorFormat": "Use a PNG, JPG, WebP or GIF image.",
+      "errorSize": "Image must be up to 2 MB.",
+      "errorUpload": "Could not upload photo. Verify the 'avatars' bucket and policies exist."
+    }
+  },
+  "header": {
+    "nav": {
+      "partnerships": "Partnerships",
+      "status": "Status",
+      "publish": "Publish",
+      "download": "Download",
+      "searchAriaLabel": "Search packages"
+    },
+    "userMenu": {
+      "loggedInAs": "Logged in as",
+      "publisherFallback": "Publisher",
+      "myProfile": "My Profile",
+      "myWorkspaces": "My Workspaces",
+      "myTokens": "My Tokens",
+      "account": "Account & Security",
+      "signOut": "Sign out",
+      "signIn": "Sign in",
+      "register": "Create Account"
+    },
+    "mobile": {
+      "openMenu": "Open menu",
+      "home": "Home",
+      "catalog": "Package Catalog",
+      "partnerships": "Partnerships",
+      "status": "Portal Status",
+      "publish": "Publish Package",
+      "download": "Download apps",
+      "dashboard": "My Dashboard",
+      "profile": "My Profile",
+      "workspaces": "My Workspaces",
+      "tokens": "My Tokens",
+      "account": "Account & Security",
+      "signOut": "Sign out",
+      "signIn": "Sign in",
+      "register": "Create Account"
+    }
+  },
+  "footer": {
+    "description": "The unified catalog for discovering and distributing packages and components for Delphi, Lazarus, C++ Builder and RAD Studio.",
+    "verifiedPackages": "Integrated package verification",
+    "platform": "Platform",
+    "searchLibraries": "Search Libraries",
+    "publishComponent": "Publish Component",
+    "highlightPlans": "Highlight Plans",
+    "apiDocs": "API Documentation",
+    "ecosystem": "Ecosystem",
+    "githubHosting": "GitHub Hosting",
+    "guidelines": "Guidelines",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "commercialRules": "Commercial Rules",
+    "trademark": "Delphi and RAD Studio are registered trademarks of Embarcadero Technologies.",
+    "trademarkLabel": "Trademark Notice:",
+    "copyright": "All rights reserved",
+    "tagline": "Built with ❤️ for the global Pascal community"
+  },
+  "packageStatus": {
+    "active": "Active",
+    "pending": "Pending",
+    "validating": "Validating",
+    "rejected": "Rejected",
+    "commercial": "Commercial",
+    "edit": "Edit",
+    "deprecated": "Deprecated",
+    "deleted": "Deleted"
+  },
+  "tiers": {
+    "card": {
+      "gold": "Gold Tier",
+      "silver": "Silver Tier",
+      "bronze": "Bronze Tier"
+    },
+    "row": {
+      "gold": "Gold",
+      "silver": "Silver",
+      "bronze": "Bronze"
+    }
+  },
+  "markdownEditor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "code": "Code",
+    "link": "Link",
+    "list": "List",
+    "write": "Write",
+    "preview": "Preview",
+    "nothingToPreview": "Nothing to preview.",
+    "footerSupports": "Supports",
+    "footerHint": "— bold, italic, code, links and lists."
+  },
+  "publish": {
+    "meta": {
+      "title": "Publish package — PubPascal-Dev",
+      "description": "Register a new Object Pascal package on PubPascal-Dev. After submission, your publication goes through the validation pipeline before appearing in the public catalog."
+    },
+    "heading": "Publish package",
+    "intro": "Register your Object Pascal package. After submission, the validation pipeline checks the repository structure (documentation, examples, images) and, once approved, the package appears automatically in the public catalog.",
+    "disclaimer": "By publishing, you confirm that you hold the rights to the declared content and agree to the use of the information for indexing on the portal.",
+    "form": {
+      "nameLabel": "Package name",
+      "namePlaceholder": "Component, library or framework name",
+      "publisherNameLabel": "How you want to be credited (publisher)",
+      "publisherNamePlaceholder": "Display name shown on your packages",
+      "publisherNameHelp": "We pull from your login by default. Applies to all your packages.",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe what the package offers. Supports Markdown (bold, code, lists…).",
+      "repositoryUrlLabel": "Repository URL",
+      "repositoryUrlPlaceholder": "https://github.com/owner/repo",
+      "repositoryUrlHelp": "Accepts GitHub, GitLab and Bitbucket.",
+      "licenseTypeLegend": "License type",
+      "licenseOpenSource": "Open Source",
+      "licenseCommercial": "Commercial",
+      "licenseNameLabel": "License name",
+      "licenseNamePlaceholder": "e.g.: MIT, Apache-2.0, Proprietary",
+      "websiteUrlLabel": "Website (optional)",
+      "websiteUrlPlaceholder": "https://example.com",
+      "exampleLabel": "Example (optional)",
+      "examplePlaceholder": "Markdown with a usage example. Appears on the Example tab before the repository content.",
+      "installingLabel": "Installation (optional)",
+      "installingPlaceholder": "Markdown with installation instructions. Appears on the Installation tab before the repository content.",
+      "platformsLegend": "Supported platforms",
+      "languagesLegend": "IDE / Dialect",
+      "categoriesLegend": "Categories",
+      "submitIdle": "Submit for validation",
+      "submitPending": "Submitting…"
+    },
+    "success": {
+      "title": "Package submitted for validation ✓",
+      "idLabel": "Generated identifier:",
+      "statusNotePrefix": "Your package has status",
+      "statusNoteSuffix": "and will be reviewed by the validation pipeline. Once approved, it appears in the public catalog.",
+      "viewPackage": "View package page",
+      "submitAnother": "Submit another package"
+    },
+    "banner": {
+      "unauthorized": "Your session expired. Sign in again to continue."
+    },
+    "errors": {
+      "name": "The name must be between 3 and 80 characters.",
+      "nameSlug": "Could not generate an identifier (slug) from this name.",
+      "nameConflict": "A package with this name already exists (identifier in use). Choose another name.",
+      "publisherName": "The display name must be at most 60 characters.",
+      "description": "The description must be between 20 and 2000 characters.",
+      "repositoryRequired": "Provide the package repository.",
+      "repositoryInvalid": "Use an HTTPS URL from GitHub, GitLab or Bitbucket (e.g. https://github.com/owner/repo).",
+      "repositoryConflict": "This repository was already registered by another publication.",
+      "licenseType": "Select a license type.",
+      "licenseNameRequired": "Provide the license name (e.g. MIT, Apache-2.0, Proprietary).",
+      "licenseNameLength": "The license name must be at most 60 characters.",
+      "website": "The website must start with https://.",
+      "platformsRequired": "Select at least one platform.",
+      "platformsInvalid": "Invalid platform.",
+      "languagesRequired": "Select at least one IDE/dialect.",
+      "languagesInvalid": "Invalid IDE/dialect.",
+      "categoriesRequired": "Select at least one category.",
+      "categoriesInvalid": "Invalid category.",
+      "curatedMax": "The content must be at most 8000 characters.",
+      "dbError": "Could not register the package right now. Try again in a moment.",
+      "unexpected": "Unexpected error while registering the package.",
+      "rateLimited": "Too many publish attempts. Please wait a few minutes and try again."
+    }
+  },
+  "dashboard": {
+    "meta": {
+      "title": "Publisher dashboard — PubPascal-Dev",
+      "description": "Manage your Object Pascal packages published on PubPascal-Dev.",
+      "editTitle": "Edit package — PubPascal-Dev"
+    },
+    "sponsorship": "Sponsorship plans",
+    "publish": "Publish package",
+    "myPackagesPrefix": "My",
+    "myPackagesHighlight": "Packages",
+    "emptyTitle": "You haven't published any packages yet",
+    "emptyBodyPrefix": "Use",
+    "emptyBodyHighlight": "Publish package",
+    "emptyBodySuffix": "to register your first Object Pascal package.",
+    "edit": {
+      "back": "My packages",
+      "headingPrefix": "Edit",
+      "headingHighlight": "Package",
+      "notEditable": "Name, slug and repository are not editable here.",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe what the package offers. Supports Markdown (bold, code, lists…).",
+      "publisherNameLabel": "How you want to be credited (publisher)",
+      "publisherNamePlaceholder": "Display name shown on your packages",
+      "publisherNameHelp": "Applies to all your packages. Leave blank to keep the current value.",
+      "websiteLabel": "Website (https)",
+      "fundingLabel": "Funding / sponsor link (optional)",
+      "fundingPlaceholder": "https://github.com/sponsors/you",
+      "screenshotsLabel": "Screenshots (optional)",
+      "screenshotsPlaceholder": "https://raw.githubusercontent.com/owner/repo/main/docs/shot1.png",
+      "screenshotsHelp": "One image URL per line, hosted on githubusercontent.com (e.g. in your repo). Shown as a gallery. Up to 10.",
+      "exampleLabel": "Example (markdown, optional)",
+      "examplePlaceholder": "Appears on the Example tab before the repository content.",
+      "installingLabel": "Installation (markdown, optional)",
+      "installingPlaceholder": "Appears on the Installation tab before the repository content.",
+      "licenseTypeLabel": "License type",
+      "licenseNameLabel": "License name",
+      "licenseOpenSource": "Open Source",
+      "licenseCommercial": "Commercial",
+      "platformsLegend": "Platforms",
+      "languagesLegend": "IDE / Dialect",
+      "categoriesLegend": "Categories",
+      "deprecatedLabel": "Deprecation notice (optional)",
+      "deprecatedPlaceholder": "e.g. Deprecated — use FooBar 2.x going forward.",
+      "deprecatedHelp": "Leave blank if the package is current. When set, a banner steers adopters away. Max 280 chars.",
+      "yankedLabel": "Yanked versions (optional)",
+      "yankedPlaceholder": "2.1.0\n2.0.3",
+      "yankedHelp": "One version per line. Yanked versions stay listed but are flagged so adopters avoid them.",
+      "dangerZone": "Danger zone",
+      "delete": "Delete package",
+      "deleteHelp": "Removes the package from the catalog, detail page, search, and sitemap. The record is kept and can be restored here.",
+      "restore": "Restore package",
+      "restoreHelp": "This package is deleted and hidden from the public. Restore it to make it active again.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "id": "Invalid ID.",
+      "description": "The description must be between 20 and 2000 characters.",
+      "website": "The website must start with https://.",
+      "licenseType": "Select a valid license type.",
+      "licenseName": "Provide the license name (up to 60 characters).",
+      "platforms": "Select at least one valid platform.",
+      "languages": "Select at least one valid IDE/dialect.",
+      "categories": "Select at least one valid category.",
+      "publisherName": "The display name must be at most 60 characters.",
+      "curatedMax": "The content must be at most 8000 characters.",
+      "deprecated": "The deprecation notice must be at most 280 characters.",
+      "funding": "The funding link must start with https://.",
+      "screenshots": "Each screenshot must be an https://…githubusercontent.com image URL.",
+      "saveFailed": "Could not save the changes. Try again."
+    }
+  },
+  "tokens": {
+    "meta": {
+      "title": "Personal Access Tokens — PubPascal",
+      "description": "Generate and manage Personal Access Tokens for Delphi CLI authentication."
+    },
+    "list": {
+      "titlePrefix": "My",
+      "titleHighlight": "Tokens",
+      "subtitle": "Bearer credentials for the Delphi CLI. Each token grants manifest-read access only.",
+      "emptyTitle": "No tokens yet",
+      "emptyBody": "Generate your first token to authenticate the Delphi CLI against the manifest endpoint."
+    },
+    "table": {
+      "labelCol": "Label",
+      "prefixCol": "Prefix",
+      "createdCol": "Created",
+      "lastUsedCol": "Last used",
+      "expiresCol": "Expires",
+      "statusCol": "Status",
+      "revokeButton": "Revoke",
+      "revoking": "Revoking...",
+      "never": "Never"
+    },
+    "status": {
+      "active": "Active",
+      "revoked": "Revoked",
+      "expired": "Expired"
+    },
+    "form": {
+      "heading": "Generate new token",
+      "labelLabel": "Label (optional)",
+      "labelPlaceholder": "e.g. My laptop",
+      "expiresAtLabel": "Expires at (optional)",
+      "generate": "Generate token",
+      "generating": "Generating..."
+    },
+    "copyBanner": {
+      "heading": "Your new token",
+      "warning": "Copy this token now — you will not see it again.",
+      "copy": "Copy",
+      "copied": "Copied!"
+    },
+    "errors": {
+      "labelTooLong": "Label must be at most 120 characters.",
+      "expiresAtInvalid": "Invalid expiry date.",
+      "expiresAtPast": "Expiry date must be in the future.",
+      "saveFailed": "Could not generate the token. Please try again.",
+      "revokeFailed": "Could not revoke the token. Please try again.",
+      "rateLimited": "Too many token requests. Please wait a while and try again."
+    }
+  },
+  "account": {
+    "title": "Account",
+    "titleHighlight": "& Security",
+    "subtitle": "Your registration data, permissions and session. Your packages are in",
+    "myProfileLink": "My Profile",
+    "signOut": "Sign out",
+    "loading": "Loading user panel...",
+    "roles": {
+      "admin": "Administrator",
+      "publisher": "Developer / Editor",
+      "user": "User / Reader"
+    },
+    "sync": {
+      "badge": "Supabase Synced",
+      "hint": "Public profile auto-generated by registration trigger."
+    },
+    "details": {
+      "heading": "Account Details",
+      "uuid": "Unique Identifier (UUID)",
+      "email": "Email Address",
+      "createdAt": "Member Since",
+      "unavailable": "Unavailable"
+    },
+    "security": {
+      "heading": "Security & RLS Permissions",
+      "body": "Your account has active Row-Level Security (RLS) policies in PostgreSQL. Your credentials grant creation and editing rights exclusively over packages whose",
+      "bodyTail": "matches your unique UUID.",
+      "readPolicy": "Public Read (Active)",
+      "insertPolicy": "Owner Insert (Active)",
+      "updateDeletePolicy": "Owner Update/Delete (Active)"
+    }
+  }
+}

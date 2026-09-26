@@ -1,0 +1,111 @@
+name: Esteira validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository_url:
+        description: "HTTPS URL of the target repository (github.com / gitlab.com / bitbucket.org)"
+        required: true
+        type: string
+      slug:
+        description: "Package slug (used for artifact name and report identity)"
+        required: true
+        type: string
+
+run-name: "Esteira validation — ${{ inputs.slug }}"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout portal repo
+        uses: actions/checkout@v7
+        with:
+          path: portal
+
+      - name: Parse repository URL
+        id: parse
+        env:
+          REPOSITORY_URL: ${{ inputs.repository_url }}
+        run: |
+          set -euo pipefail
+          url="${REPOSITORY_URL}"
+          owner=""
+          repo=""
+          host=""
+          if [[ "$url" =~ ^https://(github|gitlab|bitbucket)\.(com|org)/([^/]+)/([^/]+)/?$ ]]; then
+            host="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+            owner="${BASH_REMATCH[3]}"
+            repo="${BASH_REMATCH[4]%.git}"
+          fi
+          if [[ "$host" == "github.com" && -n "$owner" && -n "$repo" ]]; then
+            echo "is_github=true" >> "$GITHUB_OUTPUT"
+            echo "owner=$owner" >> "$GITHUB_OUTPUT"
+            echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_github=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout target repository
+        id: clone
+        if: steps.parse.outputs.is_github == 'true'
+        continue-on-error: true
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ steps.parse.outputs.owner }}/${{ steps.parse.outputs.repo }}
+          ref: HEAD
+          path: target
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Compute clone status
+        id: status
+        run: |
+          set -euo pipefail
+          if [[ "${{ steps.parse.outputs.is_github }}" != "true" ]]; then
+            echo "value=not_supported" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ steps.clone.outcome }}" != "success" ]]; then
+            echo "value=failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=ok" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Esteira validation
+        env:
+          ESTEIRA_CLONE_STATUS: ${{ steps.status.outputs.value }}
+        run: |
+          set -euo pipefail
+          node portal/scripts/esteira/validate.mjs target "${{ inputs.slug }}" --repo "${{ inputs.repository_url }}"
+
+      - name: Upload validation report
+        uses: actions/upload-artifact@v7
+        with:
+          name: esteira-report-${{ inputs.slug }}
+          path: validation-report.json
+          retention-days: 30
+
+      - name: Append step summary
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ ! -f validation-report.json ]]; then
+            echo "validation-report.json missing — skipping summary." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          verdict=$(jq -r '.verdict' validation-report.json)
+          {
+            echo "## Esteira — ${{ inputs.slug }}"
+            echo ""
+            echo "**Verdict:** \`$verdict\`"
+            echo ""
+            echo "| Rule | Outcome | Detail |"
+            echo "|------|---------|--------|"
+            jq -r '.rules[] | "| \(.key) | \(.outcome) | \(.detail) |"' validation-report.json
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,24 @@
+package ppota;
+
+// Design-time package: docks the shared PubPascal.View frame inside RAD Studio
+// via the Open Tools API. Loads into the (Win32) IDE, so it builds with dcc32.
+// It CONTAINS the shared core (View + CliRunner) and the OTA host (PubPascal.IDE),
+// and REQUIRES designide for ToolsAPI/DeskUtil and vclwinx for Vcl.Edge (WebView2).
+
+{$DESCRIPTION 'PubPascal Workspace - IDE plugin (OTA)'}
+{$IMPLICITBUILD OFF}
+{$DESIGNONLY}
+
+requires
+  rtl,
+  vcl,
+  vcledge,
+  designide;
+
+contains
+  PubPascal.CliRunner in '..\core\PubPascal.CliRunner.pas',
+  PubPascal.Installer in '..\core\PubPascal.Installer.pas',
+  PubPascal.View in '..\core\PubPascal.View.pas',
+  PubPascal.IDE in 'PubPascal.IDE.pas';
+
+end.

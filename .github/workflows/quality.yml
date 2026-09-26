@@ -1,0 +1,62 @@
+name: Quality Gates
+
+# Heavy quality checks for the release PR (develop / work branch → main).
+# Fast per-task gates live in verify-build.yml (build + lint + tests).
+#
+# NOTE: this is a PRIVATE repo without GitHub Advanced Security, so CodeQL
+# (code scanning) and actions/dependency-review-action are unavailable —
+# both hard-fail with "not enabled for this repository". If the repo ever
+# goes public (or GHAS is purchased), re-add them; until then `npm audit`
+# covers the vulnerable-dependency gate.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # -------- npm audit: blocks known-vulnerable deps (high/critical) --------
+  npm-audit:
+    name: npm audit (high+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: '22' }
+      - name: Audit production and dev dependencies
+        run: npm audit --audit-level=high
+
+  # -------- Secret Scanning: documents repo-level enablement --------
+  # Real scanning runs at the repo settings level (GH Advanced Security or public repo).
+  # This job only verifies the alerts API is reachable — it does not scan content.
+  secret-scanning-check:
+    name: Secret Scanning Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify secret-scanning API reachable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          status=$(gh api -i "repos/${{ github.repository }}/secret-scanning/alerts" --silent -q '.' 2>&1 | head -1 || true)
+          if echo "$status" | grep -q "404"; then
+            echo "::warning::Secret scanning not enabled. Enable at Settings → Code security."
+          else
+            echo "Secret scanning API reachable."
+          fi
+
+  # -------- Aggregate: single required check for branch protection --------
+  required-status-summary:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    needs: [npm-audit]
+    if: always()
+    steps:
+      - name: Verify all upstream jobs succeeded
+        run: |
+          if [[ "${{ needs.npm-audit.result }}" != "success" ]]; then exit 1; fi
+          echo "All quality gates passed."
