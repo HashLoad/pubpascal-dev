@@ -4,7 +4,7 @@ Acervo de memoria do projeto, em **OKF (Open Knowledge Format) v0.2**.
 Um fato por arquivo; `type` na raiz do frontmatter; o **Concept ID e o caminho
 do arquivo sem `.md`**, e `name:` espelha esse caminho.
 
-Este `index.md` e **GERADO** por `.project/okf-index.py` e cobre os 39 conceitos,
+Este `index.md` e **GERADO** por `.project/okf-index.py` e cobre os 40 conceitos,
 sem excecao — **nao se edita a mao**. A curadoria (o que ler primeiro, o que e
 historia) vive em `MEMORY.md`, que e o indice que o agente carrega em sessao;
 este aqui existe para que **nenhum conceito fique invisivel**, que foi como um
@@ -15,7 +15,7 @@ lido em 2026-09-16 — a v0.2 foi emendada no lugar sem bump, entao a versao soz
 nao identifica o texto. Todo timestamp de frontmatter leva offset UTC explicito.
 
 
-## Project — 25
+## Project — 26
 
 *trabalho em andamento, metas e restricoes que o codigo e o git nao registram*
 
@@ -43,6 +43,7 @@ nao identifica o texto. Todo timestamp de frontmatter leva offset UTC explicito.
 * [project-sbom-strategy](project-sbom-strategy.md) - Decisão arquitetural SBOM/CRA — PubDelphi CLI próprio + DPM vendorizado como library via adapter, portal como registry, contribuições upstream pontuais
 * [project-three-native-products](project-three-native-products.md) - ⭐ TAXONOMIA dos apps nativos PubPascal — são TRÊS produtos distintos (CLI, Desktop, IDE/OTA). O WebView2 (frame-core) NÃO é produto, é o COMPONENTE reaproveitado entre Desktop e IDE(OTA). Casa canônica = monorepo pubpascal-app.
 * [project-vision-canonical](project-vision-canonical.md) - A VISÃO canônica do PubDelphi nas palavras do operador (2026-06-09) — a origem (DOR de gerenciar PAI+deps), o workspace, o CLI, o Boss honrado, e a lei SBOM via fontes DPM por adapter. LER ANTES DE PROPOR QUALQUER COISA.
+* [workflow-ciclo-desenvolvimento-git](workflow-ciclo-desenvolvimento-git.md) - Ciclo canônico e obrigatório de desenvolvimento Git na organização (Issue -> Branch -> Commit -> PR -> Aprovação -> Sync Main -> Cleanup).
 * [workflow-dev-flow-contribution](workflow-dev-flow-contribution.md) - Automated contribution flow eliminating manual 6-step Git fork and PR burocracy.
 
 
