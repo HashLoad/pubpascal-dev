@@ -52,6 +52,7 @@ type
     FContext: IPubPascalContext;
     FCli: ICliRunner;
     FWorkspaceRoot: string;
+    FCurrentWorkspaceId: string;
     FDlgFolderEdit: TEdit;
     FEdge: TEdgeBrowser;
     FPanelWeb: TPanel;
@@ -76,7 +77,7 @@ type
     procedure _LoadWorkspaces;
     procedure _RefreshStatus(const AWorkspaceId: string);
     procedure _SweepStatus(const AIds: TArray<string>);
-    procedure _CloneWorkspace(const AWorkspaceId: string);
+    procedure _CloneWorkspace(const AWorkspaceId: string; const AFolder: string = '');
     procedure _SearchCatalog(const AQuery: string);
     procedure _FetchPackageDetail(const APackId: string);
     procedure _RunNodeAction(const AAction, ANode: string);
@@ -383,7 +384,22 @@ var
   LPath: string;
 begin
   Result := '';
-  // 1. Try to load from embedded RCDATA resource
+  // 1. Try to load from local file system first (development hot-reload helper)
+  LPath := TPath.Combine(ExtractFilePath(ParamStr(0)), 'workspace-graph.html');
+  if not TFile.Exists(LPath) then
+    LPath := TPath.Combine(TPath.Combine(ExtractFilePath(ParamStr(0)), '..'), 'workspace-graph.html');
+  if not TFile.Exists(LPath) then
+    LPath := TPath.Combine(TPath.Combine(TPath.Combine(ExtractFilePath(ParamStr(0)), '..'), '..'), 'workspace-graph.html');
+  if not TFile.Exists(LPath) then
+    LPath := TPath.Combine(TPath.Combine(TPath.Combine(TPath.Combine(ExtractFilePath(ParamStr(0)), '..'), '..'), 'core'), 'workspace-graph.html');
+
+  if TFile.Exists(LPath) then
+  begin
+    Result := TFile.ReadAllText(LPath, TEncoding.UTF8);
+    Exit;
+  end;
+
+  // 2. Fallback: try to load from embedded RCDATA resource
   if FindResource(HInstance, PChar(AName), RT_RCDATA) <> 0 then
   begin
     LRes := TResourceStream.Create(HInstance, AName, RT_RCDATA);
@@ -400,24 +416,12 @@ begin
       LRes.Free;
     end;
   end;
-
-  // 2. Fallback: try to load from local file system (development environment helper)
-  LPath := TPath.Combine(ExtractFilePath(ParamStr(0)), 'workspace-graph.html');
-  if not TFile.Exists(LPath) then
-    LPath := TPath.Combine(TPath.Combine(ExtractFilePath(ParamStr(0)), '..'), 'workspace-graph.html');
-  if not TFile.Exists(LPath) then
-    LPath := TPath.Combine(TPath.Combine(TPath.Combine(ExtractFilePath(ParamStr(0)), '..'), '..'), 'workspace-graph.html');
-  if not TFile.Exists(LPath) then
-    LPath := TPath.Combine(TPath.Combine(TPath.Combine(TPath.Combine(ExtractFilePath(ParamStr(0)), '..'), '..'), 'core'), 'workspace-graph.html');
-
-  if TFile.Exists(LPath) then
-    Result := TFile.ReadAllText(LPath, TEncoding.UTF8);
 end;
 
 procedure THostForm._OnWebMessageReceived(Sender: TCustomEdgeBrowser; Args: TWebMessageReceivedEventArgs);
 var
   LRoot: TJSONValue;
-  LAction, LNode, LMsg: string;
+  LAction, LNode, LFolder, LMsg: string;
   LRaw: PWideChar;
 begin
   LMsg := '';
@@ -438,25 +442,47 @@ begin
     LAction := TJSONObject(LRoot).GetValue<string>('action');
     if not TJSONObject(LRoot).TryGetValue<string>('node', LNode) then
       LNode := '';
+    if not TJSONObject(LRoot).TryGetValue<string>('folder', LFolder) then
+      LFolder := '';
 
     if SameText(LAction, 'ready') then
     begin
       _LoadWorkspaces;
-      _RefreshStatus('');
       _UpdateWebViewUserStatus;
+      FEdge.ExecuteScript(Format('if (window.setWorkspaceRoot) window.setWorkspaceRoot(%s);', [TJSONString.Create(FWorkspaceRoot).ToJSON]));
     end
     else if SameText(LAction, 'refresh-status') then
-      _RefreshStatus('')
+    begin
+      var LTargetWs := LNode;
+      if LTargetWs = '' then
+        LTargetWs := FCurrentWorkspaceId;
+      _RefreshStatus(LTargetWs);
+    end
+    else if SameText(LAction, 'switch-workspace') then
+    begin
+      FCurrentWorkspaceId := LNode;
+      _RefreshStatus(FCurrentWorkspaceId);
+    end
+    else if SameText(LAction, 'clone-workspace') then
+      _CloneWorkspace(LNode, LFolder)
+    else if SameText(LAction, 'browse-folder') then
+    begin
+      var LDir := LNode;
+      if (LDir = '') or (not TDirectory.Exists(LDir)) then
+        LDir := FWorkspaceRoot;
+      if (LDir = '') or (not TDirectory.Exists(LDir)) then
+        LDir := GetCurrentDir;
+      if Vcl.FileCtrl.SelectDirectory('Select Workspace Destination Folder', '', LDir, [sdNewUI, sdNewFolder]) then
+      begin
+        FEdge.ExecuteScript(Format('if (window.setCloneFolder) window.setCloneFolder(%s);', [TJSONString.Create(LDir).ToJSON]));
+      end;
+    end
     else if SameText(LAction, 'pull-all') then
       _PullWorkspace
     else if SameText(LAction, 'commit-all') then
       _CommitWorkspace(LNode)
     else if SameText(LAction, 'diff-all') then
       _ShowDiff
-    else if SameText(LAction, 'switch-workspace') then
-      _RefreshStatus(LNode)
-    else if SameText(LAction, 'clone-workspace') then
-      _CloneWorkspace(LNode)
     else if SameText(LAction, 'catalog-search') then
       _SearchCatalog(LNode)
     else if SameText(LAction, 'package-detail') then
@@ -499,12 +525,15 @@ begin
       if LOk and (LJson <> '') then
       begin
         LIds := _ParseWorkspaceIds(LJson);
+        if (FCurrentWorkspaceId = '') and (Length(LIds) > 0) then
+          FCurrentWorkspaceId := LIds[0];
         TThread.Queue(nil,
           System.Classes.TThreadProcedure(procedure
           begin
             FEdge.ExecuteScript('window.loadWorkspaces(' + LJson + ')');
             _UpdateWebViewUserStatus;
           end));
+        _RefreshStatus(FCurrentWorkspaceId);
         _SweepStatus(LIds);
       end
       else
@@ -688,12 +717,28 @@ begin
     end).Start;
 end;
 
-procedure THostForm._CloneWorkspace(const AWorkspaceId: string);
+procedure THostForm._CloneWorkspace(const AWorkspaceId: string; const AFolder: string = '');
+var
+  LTargetFolder: string;
 begin
   if FCli = nil then
     Exit;
     
-  LogStatus('Cloning workspace ' + AWorkspaceId + '...');
+  LTargetFolder := Trim(AFolder);
+  if LTargetFolder <> '' then
+  begin
+    try
+      if not TDirectory.Exists(LTargetFolder) then
+        TDirectory.CreateDirectory(LTargetFolder);
+      _SaveWorkspaceRoot(LTargetFolder);
+      _ApplyWorkspaceRoot(LTargetFolder);
+    except
+      on E: Exception do
+        LogStatus('Target directory warning: ' + E.Message);
+    end;
+  end;
+
+  LogStatus(Format('Cloning workspace %s into %s...', [AWorkspaceId, FWorkspaceRoot]));
   
   TThread.CreateAnonymousThread(
     procedure

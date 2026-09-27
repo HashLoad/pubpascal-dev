@@ -28,6 +28,19 @@ if (-not (Test-Path "$bds\bin\dcc64.exe")) {
 $env:BDS = $bds
 $env:PATH = "$bds\bin;$bds\bin64;$env:PATH"
 
+# Auto-detect Windows Kits rc.exe to assist cgrc.exe
+$winKitDirs = @(
+    "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x86",
+    "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22000.0\x86",
+    "C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86"
+)
+foreach ($kit in $winKitDirs) {
+    if (Test-Path (Join-Path $kit "rc.exe")) {
+        $env:PATH = "$kit;$env:PATH"
+        break
+    }
+}
+
 # Copy the VCL Style file dynamically to embed it as a resource
 $styleSource = Join-Path $bds "Redist\styles\vcl\Windows10Dark.vsf"
 if (Test-Path $styleSource) {
@@ -39,59 +52,48 @@ if (Test-Path $styleSource) {
 
 try {
     # Compiles a .rc, falling back to brcc32 when cgrc cannot reach the Windows
-    # SDK's rc.exe. This used to swallow the failure: cgrc printed "Unable to
-    # invoke rc.exe", the build carried on, and the exe silently kept the
-    # previously embedded HTML -- so edits to workspace-graph.html appeared to
-    # do nothing. A resource that cannot be built is now a hard error.
+    # SDK's rc.exe.
     function Build-Resource([string] $RcFile, [switch] $Required) {
         $res = [System.IO.Path]::ChangeExtension($RcFile, '.res')
-
-        # The two compilers are complementary: cgrc handles the program resource
-        # (modern icon, version info) but needs the Windows SDK's rc.exe, which
-        # is not always installed; brcc32 has no such dependency and compiles the
-        # RCDATA web views, but dies with "Allocate failed" on the large icon.
-        # A failed attempt can leave the .res deleted or truncated -- brcc32
-        # creates the output first and then dies on the large icon -- so keep a
-        # copy and put it back rather than leaving the tree worse than we found it.
         $backup = $null
         if (Test-Path $res) {
             $backup = "$res.bak"
             Copy-Item $res $backup -Force
         }
 
-        foreach ($tool in @('cgrc.exe', 'brcc32.exe')) {
-            $exe = Join-Path "$bds\bin" $tool
-            if (-not (Test-Path $exe)) { continue }
+        $prevEAP = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            foreach ($tool in @('cgrc.exe', 'brcc32.exe')) {
+                $exe = Join-Path "$bds\bin" $tool
+                if (-not (Test-Path $exe)) { continue }
 
-            & $exe $RcFile 2>&1 | Out-Null
-            if (($LASTEXITCODE -eq 0) -and (Test-Path $res)) {
-                Write-Host "==> Resource OK ($tool): $RcFile"
-                if ($backup) { Remove-Item $backup -Force -EA SilentlyContinue }
-                return
+                & $exe $RcFile 2>$null | Out-Null
+                if (($LASTEXITCODE -eq 0) -and (Test-Path $res)) {
+                    Write-Host "==> Resource OK ($tool): $RcFile"
+                    if ($backup) { Remove-Item $backup -Force -EA SilentlyContinue }
+                    return
+                }
             }
-        }
 
-        # Last resort: drop the ICON line and retry. brcc32 dies with
-        # "Allocate failed" on a modern multi-resolution icon, but the rest of
-        # the script matters -- ppdesktop.rc also carries the VCLSTYLE the form
-        # requires, and without it the app opens on
-        # "Style 'Windows10 Dark' not found". Losing the icon is cosmetic;
-        # losing the style stops the program.
-        $brcc = Join-Path "$bds\bin" 'brcc32.exe'
-        if ((Test-Path $brcc) -and (Select-String -Path $RcFile -Pattern '^\s*MAINICON\s+ICON' -Quiet)) {
-            $reduced = [System.IO.Path]::ChangeExtension($RcFile, '.noicon.rc')
-            (Get-Content $RcFile) | Where-Object { $_ -notmatch '^\s*MAINICON\s+ICON' } | Set-Content $reduced -Encoding Ascii
+            # Last resort: drop the ICON line and retry.
+            $brcc = Join-Path "$bds\bin" 'brcc32.exe'
+            if ((Test-Path $brcc) -and (Select-String -Path $RcFile -Pattern '^\s*MAINICON\s+ICON' -Quiet)) {
+                $reduced = [System.IO.Path]::ChangeExtension($RcFile, '.noicon.rc')
+                (Get-Content $RcFile) | Where-Object { $_ -notmatch '^\s*MAINICON\s+ICON' } | Set-Content $reduced -Encoding Ascii
 
-            & $brcc $reduced 2>&1 | Out-Null
-            $reducedRes = [System.IO.Path]::ChangeExtension($reduced, '.res')
-            if (($LASTEXITCODE -eq 0) -and (Test-Path $reducedRes)) {
-                Move-Item $reducedRes $res -Force
-                Remove-Item $reduced -Force -EA SilentlyContinue
-                if ($backup) { Remove-Item $backup -Force -EA SilentlyContinue }
-                Write-Warning "Compiled $RcFile without its icon (brcc32 cannot handle it); version info and VCL style are present."
-                return
+                & $brcc $reduced 2>$null | Out-Null
+                $reducedRes = [System.IO.Path]::ChangeExtension($reduced, '.res')
+                if (($LASTEXITCODE -eq 0) -and (Test-Path $reducedRes)) {
+                    Move-Item $reducedRes $res -Force
+                    Remove-Item $reduced -Force -EA SilentlyContinue
+                    if ($backup) { Remove-Item $backup -Force -EA SilentlyContinue }
+                    Write-Host "==> Resource OK (brcc32, no icon): $RcFile"
+                    return
+                }
             }
-            Remove-Item $reduced, $reducedRes -Force -EA SilentlyContinue
+        } finally {
+            $ErrorActionPreference = $prevEAP
         }
 
         if ($backup) {

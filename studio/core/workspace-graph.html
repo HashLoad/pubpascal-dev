@@ -368,6 +368,7 @@
     border-color: rgba(59, 130, 246, 0.4); 
     box-shadow: 0 16px 40px -10px rgba(0,0,0,0.7), 0 0 15px rgba(59, 130, 246, 0.15);
     transform: translateY(-2px);
+    z-index: 100 !important;
   }
   
   .node.root { 
@@ -423,6 +424,67 @@
     border-color: var(--brand); 
     color: #fff; 
     background: rgba(59, 130, 246, 0.1);
+  }
+
+  .node .path-tag {
+    font-size: 10px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: default;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    transition: all 0.15s ease;
+  }
+  .node .path-tag:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+  }
+  .node .path-icon { font-size: 11px; }
+
+  /* Hint Tooltip popup on hover */
+  .node-hint-box {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 270px;
+    background: #090e18;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 15px rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: #cbd5e1;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+  }
+  .node:hover .node-hint-box {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-3px);
+  }
+  .hint-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    line-height: 1.4;
+  }
+  .hint-label { color: var(--muted); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .hint-val { color: #fff; font-family: ui-monospace, monospace; text-align: right; font-size: 11px; }
+  .hint-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 8px 0;
   }
   
   #log { 
@@ -747,6 +809,7 @@
         <header>
         <span class="dot"></span>
         <h1>PubPascal <span id="ws-title" style="color:var(--muted);font-weight:400">—</span></h1>
+        <span id="ws-root-badge" style="font-size:11px; color:#94a3b8; background:#0f172a; border:1px solid var(--line); border-radius:6px; padding:3px 8px; font-family:Consolas, monospace; display:inline-flex; align-items:center; gap:5px; margin-left:8px; margin-right:auto;" title="Physical Working Directory on Disk">📁 <span id="ws-root-text">D:\Ecossistema-Delphi</span></span>
         <button id="pull" title="Pull --ff-only on every repo in the workspace (never overwrites; skips dirty ones)">&#8595; Pull</button>
         <button id="commit-btn" title="Commit (add -A + commit) on every repo with changes">&#10003; Commit</button>
         <button id="diff-btn" title="View uncommitted changes (git diff HEAD)">&#177; Diff</button>
@@ -989,13 +1052,19 @@ function render(){
   svg.innerHTML = "";
 
   const root = NODES.find(n => n.root);
+  const rootName = root ? root.name : "OData";
+  const diskRoot = currentWorkspaceRoot || "D:\\Ecossistema-Delphi";
+  
+  const rootBadgeText = document.getElementById("ws-root-text");
+  if (rootBadgeText) rootBadgeText.textContent = diskRoot;
+
   document.getElementById("ws-title").textContent =
     root ? `— ${root.name.toLowerCase()}@${root.ref || "?"}` : "—";
 
   for (const n of NODES){
     const st = nodeState(n);
     const el = document.createElement("div");
-    el.className = "node" + (n.root ? " root" : "");
+    el.className = "node" + (n.root ? " root hint-bottom" : "");
     el.dataset.node = n.id;
     el.style.left = n.x + "px"; el.style.top = n.y + "px";
 
@@ -1005,11 +1074,36 @@ function render(){
     if (n.behind) track.push("↓" + n.behind);
     const trackStr = track.length ? ` &middot; <span class="track">${track.join(" ")}</span>` : "";
 
+    const isSibling = n.is_link || n.is_sibling || (n.id === "FluentSQL");
+    const locPath = n.root 
+      ? `${diskRoot}\\${n.id}` 
+      : (isSibling ? `${diskRoot}\\${n.id}` : `${diskRoot}\\${rootName}\\modules\\${n.id}`);
+    const locType = n.root ? "Root Package (PAI)" : (isSibling ? "Sovereign Sibling (Linked)" : "Nested Clone (modules/)");
+    const locIcon = n.root ? "📁" : (isSibling ? "🔗" : "📦");
+
+    const syncStr = (n.ahead ? `+${n.ahead} ahead` : "") + (n.behind ? ` -${n.behind} behind` : "") || "in sync";
+    const modeStr = n.writable ? "Direct Push (Owner)" : "Fork & PR (Contributor)";
+    const statusDesc = n.missing ? "Missing on disk" : (n.dirty ? "Modified locally (Dirty)" : "Clean (Synced)");
+
     el.innerHTML =
-      `<div class="name">${n.root ? "★ " : ""}${n.name}
+      `<div class="node-hint-box">
+         <div style="font-weight:700; color:#fff; font-size:12px; margin-bottom:6px;">${n.name} <span style="font-weight:400; color:var(--muted)">· Details</span></div>
+         <div class="hint-row"><span class="hint-label">Mount Type:</span><span class="hint-val">${locType}</span></div>
+         <div class="hint-row"><span class="hint-label">Disk Path:</span><span class="hint-val" style="font-size:10px;">${locPath}</span></div>
+         <div class="hint-row"><span class="hint-label">Git Branch:</span><span class="hint-val">${n.branch || n.ref || 'HEAD'}</span></div>
+         <div class="hint-row"><span class="hint-label">Sync Upstream:</span><span class="hint-val">${syncStr}</span></div>
+         <div class="hint-divider"></div>
+         <div class="hint-row"><span class="hint-label">Status:</span><span class="hint-val" style="color:${n.dirty ? '#fbbf24' : (n.missing ? '#f87171' : '#34d399')}">${statusDesc}</span></div>
+         <div class="hint-row"><span class="hint-label">Workflow:</span><span class="hint-val">${modeStr}</span></div>
+       </div>
+       <div class="name">${n.root ? "★ " : ""}${n.name}
           <span class="ver">${n.ref || "—"}${(n.version && n.version !== n.ref) ? ` <span style="color:var(--muted);font-weight:400">· ${n.version}</span>` : ""}</span></div>
        <div class="meta"><span class="badge ${st}">${BADGE[st]}</span>
           ${n.root ? " &middot; PAI" : " &middot; modules/" + n.id}${trackStr}</div>
+       <div class="path-tag" title="Source location on disk: ${locPath}">
+          <span class="path-icon">${locIcon}</span>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:Consolas, monospace;">${locPath}</span>
+       </div>
         <div class="actions">
            ${!n.root ? `<button data-a="contribute-node" data-n="${n.id}">Contribute</button>` : ''}
            ${!n.root && n.writable ? `<span title="You publish this package, so you can push straight to its origin — no fork needed." style="font-size:10px;color:var(--muted);font-weight:700;margin:auto auto;padding:5px 0;letter-spacing:0.3px;">direct push</span>` : ''}
