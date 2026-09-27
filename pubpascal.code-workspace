@@ -1,0 +1,31 @@
+{
+  "folders": [
+    {
+      "name": "PubPascal (Root)",
+      "path": "."
+    },
+    {
+      "name": "Portal (Web)",
+      "path": "portal"
+    },
+    {
+      "name": "Studio (Delphi)",
+      "path": "studio"
+    },
+    {
+      "name": "CLI (Boss Engine)",
+      "path": "cli"
+    },
+    {
+      "name": "Documentation",
+      "path": "docs"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true
+    }
+  }
+}

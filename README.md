@@ -1,64 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PubPascal
 
-## Getting Started
+> O ecossistema moderno de gerenciamento de dependências, empacotamento e colaboração para a comunidade Object Pascal (Delphi e Free Pascal).
 
-First, run the development server:
+Repositório central oficial: [https://github.com/HashLoad/pubpascal-dev](https://github.com/HashLoad/pubpascal-dev)
 
+---
+
+## 🏛️ Estrutura do Monorepo
+
+O ecossistema PubPascal é organizado em quatro frentes principais:
+
+```text
+pubpascal-dev/
+├── portal/       # Portal Web oficial (Next.js 15, TypeScript, Supabase, Tailwind)
+├── studio/       # Clientes nativos em Delphi (Desktop + Plugin RAD Studio OTA)
+│   ├── core/         # Componentes compartilhados (WebView2 bridge, CLI runner, visualizador)
+│   ├── desktop/      # Aplicativo Windows desktop independente (ppdesktop.exe)
+│   ├── ota/          # Pacote de design-time BPL para RAD Studio (ppota.bpl)
+│   └── installer/    # Scripts de empacotamento Inno Setup (PubPascal Setup)
+├── cli/          # Scripts e orquestração do motor de linha de comando (Boss)
+├── docs/         # Registros de decisões de arquitetura (ADRs) e especificações
+└── .github/      # Workflows automatizados de CI/CD e esteira de qualidade
+```
+
+---
+
+## 🌐 1. Portal (`portal/`)
+
+O portal web ([pubpascal.dev](https://www.pubpascal.dev)) provê o catálogo de pacotes, documentação, análise de conformidade CRA (Cyber Resilience Act), geração de SBOM, emissão de tokens de CLI e painel administrativo.
+
+### Tecnologias:
+- **Framework:** Next.js 15 (App Router) + React 19 + TypeScript
+- **Estilização:** Tailwind CSS + PostCSS
+- **Banco de Dados & Auth:** Supabase (PostgreSQL, Row Level Security, RPCs)
+- **Testes:** Vitest + React Testing Library
+
+### Como rodar localmente:
 ```bash
+cd portal
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## CI agendado — liga/desliga (pré-launch)
-
-Os workflows agendados (**Esteira sync** e **Sponsorship expiry**) estão **DESATIVADOS**
-enquanto o portal não tem receita — sem publicações de terceiros nem assinaturas pagas,
-rodar agenda é só queimar minutos de Actions.
-
+Testes unitários:
 ```bash
-# Ver o estado de tudo
-gh workflow list --all
-
-# DESLIGAR (estado atual)
-gh workflow disable esteira-sync.yml
-gh workflow disable sponsorship-expiry.yml
-
-# LIGAR de volta (quando o portal tiver tráfego real)
-gh workflow enable esteira-sync.yml
-gh workflow enable sponsorship-expiry.yml
-
-# Publicou um pacote e quer validar AGORA (sem religar a agenda):
-gh workflow enable esteira-sync.yml && gh workflow run esteira-sync.yml && gh workflow disable esteira-sync.yml
+cd portal
+npm test
 ```
 
-Notas:
-- Workflow desativado não dispara por agenda **nem manual** — por isso o "enable && run && disable" acima.
-- As cadências dentro dos `.yml` já estão no modo pré-launch (esteira manual-only, expiry mensal);
-  ao religar para valer, restaure as cadências originais indicadas nos comentários de cada arquivo.
-- `Verify Build & Lint` e `Quality Gates` ficam ativos — só rodam em push/PR (atividade sua).
+---
 
-## Learn More
+## 🖥️ 2. Studio (`studio/`)
 
-To learn more about Next.js, take a look at the following resources:
+O PubPascal Studio entrega a experiência visual para desenvolvedores Pascal gerenciarem dependências, grafos de pacotes e versionamento.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **`studio/core/`**: Biblioteca compartilhada contendo o frame visual (`PubPascal.View`), ponte com WebView2 (Microsoft Edge Chromium) e executor de comandos CLI (`PubPascal.CliRunner`).
+- **`studio/desktop/`**: Aplicação Windows nativa standalone (`ppdesktop.dpr`).
+- **`studio/ota/`**: Plugin Open Tools API (BPL) para o RAD Studio (`ppota.dpk`), acoplando a interface visual diretamente nas janelas da IDE.
+- **`studio/installer/`**: Script Inno Setup 6 (`pubpascal.iss`) para distribuição única (instalando Desktop, Plugin OTA e CLI no PATH).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Compilação:
+- Desktop: `pwsh -File studio/desktop/scripts/build.ps1`
+- OTA Plugin: `pwsh -File studio/ota/scripts/build.ps1`
+- Instalador: `pwsh -File studio/installer/build.ps1`
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ⚙️ 3. CLI (`cli/`)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O motor de linha de comando oficial do PubPascal é baseado no **Boss**, mantido em seu próprio repositório oficial. Ele provê comandos como `install`, `update`, `workspace clone/status`, `pkg spec`, `sbom` e conformidade `cra`.
+
+- O script `cli/scripts/build.ps1` orquestra a compilação do binário otimizado (`boss.exe`) utilizando o compilador Go.
+
+---
+
+## 📚 4. Documentações & ADRs (`docs/`)
+
+- [`adr-002-dev-flow-contribuicao.md`](docs/adr-002-dev-flow-contribuicao.md): Fluxo de contribuição e desenvolvimento.
+- [`retrocompatibilidade.md`](docs/retrocompatibilidade.md): Diretrizes de compatibilidade com projetos legado e ecossistema Boss.
+
+---
+
+## 🔒 Segurança
+
+Consulte [SECURITY.md](SECURITY.md) para diretrizes de divulgação responsável de vulnerabilidades.

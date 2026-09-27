@@ -1,60 +1,120 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =============================================================================
+# PubPascal Unified Monorepo - Git Ignore Rules
+# =============================================================================
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-.vitest/
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# -----------------------------------------------------------------------------
+# OS & Temporary Artifacts
+# -----------------------------------------------------------------------------
 .DS_Store
-*.pem
+Thumbs.db
+*.stackdump
+*.tmp
+*.bak
+*.orig
 
-# debug
+# -----------------------------------------------------------------------------
+# Local Agents, Memories & Tooling (Strictly local-only, not committed)
+# -----------------------------------------------------------------------------
+.agents/
+.archive/
+.claude/
+.codex/
+.gemini/
+.local-readonly/
+.scannerwork/
+.trae/
+.setup/
+.temp/
+tmp/
+
+# -----------------------------------------------------------------------------
+# Web & Portal (Next.js, Node, Supabase)
+# -----------------------------------------------------------------------------
+**/node_modules/
+**/.pnp
+.pnp.*
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/plugins
+!**/.yarn/releases
+!**/.yarn/versions
+
+# Next.js Build Outputs
+**/.next/
+**/out/
+**/build/
+**/.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing & Coverage
+**/coverage/
+**/.vitest/
+
+# Environment Variables
+.env*.local
+.env.production
+.env.staging
+
+# NPM / Yarn Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# -----------------------------------------------------------------------------
+# Delphi & RAD Studio Build Artifacts
+# -----------------------------------------------------------------------------
+*.exe
+*.dll
+*.bpl
+*.bpi
+*.dcp
+*.so
+*.apk
+*.drc
+*.map
+*.dres
+*.rsm
+*.tds
+*.dcu
+*.lib
+*.a
+*.o
+*.ocx
 
-# vercel
-.vercel
+# Exception: Static downloadable assets in portal
+!portal/public/downloads/**
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# Local-only / build artifacts — never versioned
-.build/
-.local-readonly/
-.scannerwork/
-coverage/
-dependencies/
-tmp/
-
-# Delphi CLI test build artifacts (cli/tests/) — never commit compiled output
-cli/tests/**/*.dcu
-cli/tests/Win64/
-cli/tests/*.exe
+# Delphi Local / User-Specific Settings
+*.identcache
 *.local
+*.stat
+*.tvsconfig
+*.projdata
+__recovery/
+__history/
 
-# supabase cli local state (project ref, org id, pooler url) — never versioned
-supabase/.temp/
-supabase/.branches/
+# Compiler output directories
+**/Win32/Debug/
+**/Win32/Release/
+**/Win64/Debug/
+**/Win64/Release/
+
+# -----------------------------------------------------------------------------
+# Inno Setup Outputs
+# -----------------------------------------------------------------------------
+**/studio/installer/Output/
+**/studio/installer/stage/
+
+# -----------------------------------------------------------------------------
+# CLI & Go Engine
+# -----------------------------------------------------------------------------
+**/cli/Win32/
+**/cli/Win64/
+**/cli/.modules/boss/bin/
+**/cli/.modules/boss/boss.exe
+
+# Un-ignore documentation folder (overriding global gitignore)
+!docs/
+!docs/**

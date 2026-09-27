@@ -1,0 +1,50 @@
+# Build artifacts
+*.dcu
+*.exe
+*.res
+*.~*
+*.identcache
+*.local
+*.stat
+*.tvsconfig
+Win32/
+Win64/
+Linux64/
+OSX64/
+__history/
+__recovery/
+
+# dcc64 headless build output (scripts/build.ps1)
+/Win64/
+/Win32/
+
+# Bash crash dumps
+bash.exe.stackdump
+
+# Test artifacts
+tests/Win32/
+tests/Win64/
+tests/__history/
+tests/__recovery/
+tests/*.exe
+tests/*.dcu
+
+# Editor noise
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS noise
+Thumbs.db
+.DS_Store
+
+# Local config / secrets
+.env
+.env.local
+*.local.yaml
+
+# Override the user's global .gitignore — .modules/ IS tracked in this repo
+# (it holds vendored upstream sources consumed via git submodules).
+!/.modules/
+!/.modules/**
